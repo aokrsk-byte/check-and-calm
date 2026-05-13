@@ -45,16 +45,6 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        body.dark-theme .item-name {
-            background: #475569;
-            color: #f1f5f9;
-        }
-
-        body.dark-theme .timestamp {
-            background: #475569;
-            color: #cbd5e1;
-        }
-
         body.dark-theme .secondary {
             background: #334155;
             color: #e2e8f0;
@@ -78,6 +68,32 @@
         body.dark-theme footer {
             color: #94a3b8;
         }
+
+        /* ===== ИСПРАВЛЕНИЕ: читаемый текст в тёмной теме ===== */
+        body.dark-theme input,
+        body.dark-theme .object-name,
+        body.dark-theme .room-title input,
+        body.dark-theme .item-name {
+            color: #f1f5f9 !important;
+            background-color: #334155 !important;
+        }
+
+        body.dark-theme .object-name:focus,
+        body.dark-theme .room-title input:focus,
+        body.dark-theme .item-name:focus {
+            background-color: #475569 !important;
+            outline: 1px solid #818cf8;
+        }
+
+        body.dark-theme .check-item .item-left span {
+            color: #e2e8f0;
+        }
+
+        body.dark-theme .timestamp {
+            color: #cbd5e1;
+            background-color: #475569;
+        }
+        /* ===== КОНЕЦ ИСПРАВЛЕНИЯ ===== */
 
         /* контейнер */
         .app-container {
@@ -165,10 +181,6 @@
         .object-name:focus {
             background: #fef9c3;
             outline: none;
-        }
-
-        body.dark-theme .object-name:focus {
-            background: #4b5563;
         }
 
         .room-section {
@@ -474,10 +486,10 @@
     function toggleTheme() {
         isDarkTheme = !isDarkTheme;
         applyTheme();
-        renderApp(); // перерисовываем для обновления текста кнопки
+        renderApp();
     }
 
-    // Звук (короткий щелчок)
+    // Звук
     function playClickSound() {
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -494,19 +506,16 @@
         } catch(e) { console.log("Audio not supported"); }
     }
 
-    // Вибрация
     function vibrate() {
         if(navigator.vibrate) navigator.vibrate(50);
     }
 
-    // Переключение языка
     function setLanguage(l) {
         lang = l;
         localStorage.setItem("app_lang", lang);
         renderApp();
     }
 
-    // CRUD операции
     function addObject() {
         objects.push({
             id: genId(),
@@ -633,7 +642,6 @@
         renderApp();
     }
 
-    // Подсчёт прогресса комнаты
     function getRoomProgress(room) {
         const total = room.items.length;
         const checked = room.items.filter(i => i.checked).length;
@@ -651,7 +659,6 @@
         });
     }
 
-    // ОСНОВНОЙ РЕНДЕР
     function renderApp() {
         const appDiv = document.getElementById("app");
         if(!appDiv) return;
@@ -739,7 +746,6 @@
         html += `<footer>✅ Отметьте каждый пункт перед выходом. Переименовывайте как удобно.</footer>`;
         appDiv.innerHTML = html;
 
-        // ----- ПРИВЯЗКА СОБЫТИЙ -----
         document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
         document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
         document.getElementById("addObjectBtn")?.addEventListener("click", () => addObject());
@@ -829,7 +835,6 @@
         });
     }
 
-    // Инициализация
     loadData();
     applyTheme();
     renderApp();
