@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>Check&Calm — выключил? Спокойствие</title>
     <style>
         * {
@@ -10,12 +10,73 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* СВЕТЛАЯ ТЕМА (по умолчанию) */
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #f1f5f9;
             margin: 0;
             padding: 0 0 80px 0;
             color: #0f172a;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ТЁМНАЯ ТЕМА */
+        body.dark-theme {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        body.dark-theme .header {
+            background: #1e293b;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        body.dark-theme .object-card {
+            background: #1e293b;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+
+        body.dark-theme .room-section {
+            background: #0f172a;
+        }
+
+        body.dark-theme .check-item {
+            background: #334155;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        body.dark-theme .item-name {
+            background: #475569;
+            color: #f1f5f9;
+        }
+
+        body.dark-theme .timestamp {
+            background: #475569;
+            color: #cbd5e1;
+        }
+
+        body.dark-theme .secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        body.dark-theme .lang-select {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        body.dark-theme .btn-danger {
+            background: #7f1a1a;
+            color: #fecaca;
+        }
+
+        body.dark-theme .delete-item {
+            background: #7f1a1a;
+            color: #fecaca;
+        }
+
+        body.dark-theme footer {
+            color: #94a3b8;
         }
 
         /* контейнер */
@@ -29,7 +90,7 @@
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
+            align-items: center;
             flex-wrap: wrap;
             gap: 12px;
             margin-bottom: 20px;
@@ -49,7 +110,13 @@
             color: transparent;
         }
 
-        .lang-select {
+        body.dark-theme h1 {
+            background: linear-gradient(135deg, #818cf8, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .lang-select, .theme-toggle {
             background: #eef2ff;
             border: none;
             padding: 8px 12px;
@@ -80,6 +147,10 @@
             padding-bottom: 10px;
         }
 
+        body.dark-theme .object-header {
+            border-bottom-color: #475569;
+        }
+
         .object-name {
             font-size: 1.4rem;
             font-weight: 700;
@@ -96,6 +167,10 @@
             outline: none;
         }
 
+        body.dark-theme .object-name:focus {
+            background: #4b5563;
+        }
+
         .room-section {
             margin: 20px 0 16px 0;
             background: #f8fafc;
@@ -108,9 +183,16 @@
             font-size: 1.2rem;
             margin: 0 0 8px 0;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
+        }
+
+        .room-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             flex-wrap: wrap;
+            gap: 8px;
         }
 
         .room-title input {
@@ -120,6 +202,40 @@
             background: transparent;
             padding: 4px 0;
             border-bottom: 1px dashed #94a3b8;
+            flex: 1;
+        }
+
+        /* Прогресс-бар */
+        .room-progress-container {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        body.dark-theme .room-progress-container {
+            background: #475569;
+        }
+
+        .room-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .room-progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+
+        body.dark-theme .room-progress-stats {
+            color: #94a3b8;
         }
 
         .check-item {
@@ -169,7 +285,12 @@
             font-size: 1.5rem;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.1s;
+            transition: all 0.2s ease;
+            transform: scale(1);
+        }
+
+        .check-btn:active {
+            transform: scale(0.92);
         }
 
         .check-btn.checked {
@@ -183,6 +304,7 @@
             background: #f1f5f9;
             padding: 4px 8px;
             border-radius: 20px;
+            transition: opacity 0.3s;
         }
 
         .delete-item {
@@ -267,7 +389,10 @@
             defaultSocketName: "Розетка",
             defaultSwitchName: "Выключатель",
             defaultGasName: "Газ",
-            noObjects: "Нет объектов. Нажмите «+ Добавить объект»"
+            noObjects: "Нет объектов. Нажмите «+ Добавить объект»",
+            themeLight: "☀️ Светлая",
+            themeDark: "🌙 Тёмная",
+            progress: "Прогресс"
         },
         en: {
             appTitle: "Check&Calm",
@@ -286,23 +411,25 @@
             defaultSocketName: "Outlet",
             defaultSwitchName: "Switch",
             defaultGasName: "Gas",
-            noObjects: "No places. Press '+ Add place'"
+            noObjects: "No places. Press '+ Add place'",
+            themeLight: "☀️ Light",
+            themeDark: "🌙 Dark",
+            progress: "Progress"
         }
     };
 
     let lang = localStorage.getItem("app_lang") || "ru";
-    let objects = []; // структура: { id, name, rooms: [] }
+    let objects = [];
 
-    // Вспомогательная генерация ID
+    // Генерация ID
     function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 6); }
 
-    // Загрузка из localStorage
+    // Загрузка данных
     function loadData() {
         const saved = localStorage.getItem("check_calm_app");
         if(saved) {
             objects = JSON.parse(saved);
         } else {
-            // демо-пример: квартира с одной комнатой
             objects = [{
                 id: genId(),
                 name: "Моя квартира",
@@ -334,14 +461,52 @@
 
     function t(key) { return translations[lang][key] || translations.ru[key] || key; }
 
-    // Переключение языка и перерисовка
+    // Тёмная тема
+    let isDarkTheme = localStorage.getItem("theme_dark") === "true";
+    function applyTheme() {
+        if(isDarkTheme) {
+            document.body.classList.add("dark-theme");
+        } else {
+            document.body.classList.remove("dark-theme");
+        }
+        localStorage.setItem("theme_dark", isDarkTheme);
+    }
+    function toggleTheme() {
+        isDarkTheme = !isDarkTheme;
+        applyTheme();
+        renderApp(); // перерисовываем для обновления текста кнопки
+    }
+
+    // Звук (короткий щелчок)
+    function playClickSound() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 880;
+            gainNode.gain.value = 0.1;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
+            oscillator.stop(audioContext.currentTime + 0.2);
+            audioContext.resume();
+        } catch(e) { console.log("Audio not supported"); }
+    }
+
+    // Вибрация
+    function vibrate() {
+        if(navigator.vibrate) navigator.vibrate(50);
+    }
+
+    // Переключение языка
     function setLanguage(l) {
         lang = l;
         localStorage.setItem("app_lang", lang);
         renderApp();
     }
 
-    // Добавление нового объекта
+    // CRUD операции
     function addObject() {
         objects.push({
             id: genId(),
@@ -360,7 +525,6 @@
         }
     }
 
-    // Работа с комнатами
     function addRoom(objId) {
         const obj = objects.find(o => o.id === objId);
         if(obj) {
@@ -383,7 +547,6 @@
         }
     }
 
-    // Добавление предмета (розетка, выключатель, газ)
     function addItem(objId, roomId, type) {
         const obj = objects.find(o => o.id === objId);
         if(!obj) return;
@@ -428,6 +591,8 @@
                     item.checked = !item.checked;
                     if(item.checked) {
                         item.lastCheck = new Date().toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+                        playClickSound();
+                        vibrate();
                     } else {
                         item.lastCheck = null;
                     }
@@ -468,7 +633,25 @@
         renderApp();
     }
 
-    // Основной рендер
+    // Подсчёт прогресса комнаты
+    function getRoomProgress(room) {
+        const total = room.items.length;
+        const checked = room.items.filter(i => i.checked).length;
+        const percent = total === 0 ? 0 : (checked / total) * 100;
+        return { total, checked, percent };
+    }
+
+    function escapeHtml(str) {
+        if(!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // ОСНОВНОЙ РЕНДЕР
     function renderApp() {
         const appDiv = document.getElementById("app");
         if(!appDiv) return;
@@ -476,10 +659,13 @@
         let html = `
             <div class="header">
                 <h1>${t("appTitle")}</h1>
-                <select class="lang-select" id="langSelect">
-                    <option value="ru" ${lang === "ru" ? "selected" : ""}>🇷🇺 Русский</option>
-                    <option value="en" ${lang === "en" ? "selected" : ""}>🇬🇧 English</option>
-                </select>
+                <div style="display: flex; gap: 8px;">
+                    <button class="theme-toggle" id="themeToggleBtn">${isDarkTheme ? t("themeLight") : t("themeDark")}</button>
+                    <select class="lang-select" id="langSelect">
+                        <option value="ru" ${lang === "ru" ? "selected" : ""}>🇷🇺 Русский</option>
+                        <option value="en" ${lang === "en" ? "selected" : ""}>🇬🇧 English</option>
+                    </select>
+                </div>
             </div>
             <div class="global-actions">
                 <button class="secondary" id="addObjectBtn">➕ ${t("addObject")}</button>
@@ -496,15 +682,23 @@
                         <button class="secondary btn-danger" data-deleteobj="${obj.id}">🗑 ${t("deleteObject")}</button>
                     </div>`;
 
-                // комнаты
                 for(let room of obj.rooms) {
+                    const progress = getRoomProgress(room);
                     html += `<div class="room-section" data-roomid="${room.id}" data-objid="${obj.id}">
                         <div class="room-title">
-                            <input type="text" value="${escapeHtml(room.name)}" data-objid="${obj.id}" data-roomid="${room.id}" data-field="roomname" placeholder="${t("placeholderRoomName")}">
-                            <button class="secondary" data-deleteroom="${obj.id}|${room.id}">🗑</button>
+                            <div class="room-title-row">
+                                <input type="text" value="${escapeHtml(room.name)}" data-objid="${obj.id}" data-roomid="${room.id}" data-field="roomname" placeholder="${t("placeholderRoomName")}">
+                                <button class="secondary" data-deleteroom="${obj.id}|${room.id}">🗑</button>
+                            </div>
+                            <div class="room-progress-container">
+                                <div class="room-progress-bar" style="width: ${progress.percent}%"></div>
+                            </div>
+                            <div class="room-progress-stats">
+                                <span>📊 ${t("progress")}</span>
+                                <span>${progress.checked}/${progress.total} (${Math.round(progress.percent)}%)</span>
+                            </div>
                         </div>`;
 
-                    // предметы в комнате
                     for(let item of room.items) {
                         let itemTypeIcon = "";
                         if(item.type === "socket") itemTypeIcon = "🔌";
@@ -527,34 +721,29 @@
                         </div>`;
                     }
 
-                    // кнопки добавления в комнате
                     html += `<div class="add-buttons">
                         <button class="secondary" data-additem="${obj.id}|${room.id}|socket">➕ ${t("addSocket")}</button>
                         <button class="secondary" data-additem="${obj.id}|${room.id}|switch">💡 ${t("addSwitch")}</button>
                         <button class="secondary" data-additem="${obj.id}|${room.id}|gas">🔥 ${t("addGas")}</button>
                     </div>
-                    </div>`; // закрываем room-section
+                    </div>`;
                 }
 
-                // кнопка добавить комнату
                 html += `<div class="add-buttons" style="margin-top: 12px;">
                     <button class="secondary" data-addroom="${obj.id}">🏠 ${t("addRoom")}</button>
                 </div>
-                </div>`; // закрываем object-card
+                </div>`;
             }
         }
 
         html += `<footer>✅ Отметьте каждый пункт перед выходом. Переименовывайте как удобно.</footer>`;
         appDiv.innerHTML = html;
 
-        // ----- Привязываем события -----
-        // язык
+        // ----- ПРИВЯЗКА СОБЫТИЙ -----
         document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
-
-        // добавление объекта
+        document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
         document.getElementById("addObjectBtn")?.addEventListener("click", () => addObject());
 
-        // удаление объекта
         document.querySelectorAll("[data-deleteobj]").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const objId = btn.getAttribute("data-deleteobj");
@@ -563,7 +752,6 @@
             });
         });
 
-        // добавление комнаты
         document.querySelectorAll("[data-addroom]").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const objId = btn.getAttribute("data-addroom");
@@ -572,7 +760,6 @@
             });
         });
 
-        // удаление комнаты
         document.querySelectorAll("[data-deleteroom]").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const val = btn.getAttribute("data-deleteroom");
@@ -584,7 +771,6 @@
             });
         });
 
-        // добавление предмета
         document.querySelectorAll("[data-additem]").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const val = btn.getAttribute("data-additem");
@@ -596,7 +782,6 @@
             });
         });
 
-        // удаление предмета
         document.querySelectorAll("[data-deleteitem]").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const val = btn.getAttribute("data-deleteitem");
@@ -608,7 +793,6 @@
             });
         });
 
-        // переключение чекбокса (проверено/не проверено)
         document.querySelectorAll("[data-toggle]").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const val = btn.getAttribute("data-toggle");
@@ -620,7 +804,6 @@
             });
         });
 
-        // переименование объектов
         document.querySelectorAll("[data-field='objname']").forEach(inp => {
             inp.addEventListener("change", (e) => {
                 const objId = inp.getAttribute("data-objid");
@@ -628,7 +811,6 @@
             });
         });
 
-        // переименование комнат
         document.querySelectorAll("[data-field='roomname']").forEach(inp => {
             inp.addEventListener("change", (e) => {
                 const objId = inp.getAttribute("data-objid");
@@ -637,7 +819,6 @@
             });
         });
 
-        // переименование предметов
         document.querySelectorAll("[data-field='itemname']").forEach(inp => {
             inp.addEventListener("change", (e) => {
                 const objId = inp.getAttribute("data-objid");
@@ -648,20 +829,9 @@
         });
     }
 
-    function escapeHtml(str) {
-        if(!str) return "";
-        return str.replace(/[&<>]/g, function(m) {
-            if(m === '&') return '&amp;';
-            if(m === '<') return '&lt;';
-            if(m === '>') return '&gt;';
-            return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
-        });
-    }
-
-    // инициализация
+    // Инициализация
     loadData();
+    applyTheme();
     renderApp();
 </script>
 </body>
