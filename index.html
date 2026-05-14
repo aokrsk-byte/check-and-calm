@@ -1045,4 +1045,96 @@
             
             document.querySelectorAll("[data-toggle-object]").forEach(btn => {
                 btn.addEventListener("click", (e) => {
-                    const objId = btn.getAttribute("
+                    const objId = btn.getAttribute("data-toggle-object");
+                    if(objId) toggleObject(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-edit-object]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-edit-object");
+                    const obj = objects.find(o => o.id === objId);
+                    if(obj) editObject(obj);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-delete-object]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-delete-object");
+                    if(objId) deleteObjectFromList(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-toggle]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-toggle");
+                    if(val) {
+                        const [objId, roomId, itemId] = val.split("|");
+                        toggleItemCheck(objId, roomId, itemId);
+                    }
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-add-item]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-add-item");
+                    if(val) {
+                        const [objId, roomId, type] = val.split("|");
+                        addItemToExisting(objId, roomId, type);
+                    }
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-delete-item]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-delete-item");
+                    if(val) {
+                        const [objId, roomId, itemId] = val.split("|");
+                        deleteItem(objId, roomId, itemId);
+                    }
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-done]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-done");
+                    if(objId) checkAllAndDone(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-reset]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-reset");
+                    if(objId) resetCheck(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.getElementById("objNameInput")?.addEventListener("change", (e) => {
+                tempObject.name = e.target.value;
+            });
+        }
+        
+        function escapeHtml(str) {
+            if(!str) return "";
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        loadData();
+        applyTheme();
+        renderApp();
+    </script>
+</body>
+</html>
