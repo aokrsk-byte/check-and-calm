@@ -51,6 +51,16 @@
             border-color: #475569;
         }
 
+        body.dark-theme .room-block {
+            background: #1e293b;
+        }
+
+        body.dark-theme .room-name-input,
+        body.dark-theme .item-name-display {
+            color: #f1f5f9 !important;
+            background: #334155 !important;
+        }
+
         body.dark-theme .warning {
             background: #451a1a;
             color: #fecaca;
@@ -237,6 +247,20 @@
             color: #e2e8f0;
         }
 
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
         .object-list {
             display: flex;
             flex-direction: column;
@@ -276,15 +300,11 @@
         .room-content {
             padding: 0 20px 20px 20px;
             background: white;
-            display: none;
+            display: block;
         }
 
         body.dark-theme .room-content {
             background: #1e293b;
-        }
-
-        .room-content.open {
-            display: block;
         }
 
         .room-block {
@@ -292,10 +312,6 @@
             padding: 12px;
             background: #f1f5f9;
             border-radius: 16px;
-        }
-
-        body.dark-theme .room-block {
-            background: #0f172a;
         }
 
         .room-title {
@@ -307,6 +323,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .room-name-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: white;
         }
 
         .check-item {
@@ -353,6 +379,30 @@
         .check-btn-small.checked {
             background: #22c55e;
             color: white;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name-display {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .item-time {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        body.dark-theme .item-time {
+            color: #94a3b8;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .add-item-btn {
@@ -446,6 +496,46 @@
         .global-actions {
             margin-top: 20px;
         }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            max-width: 300px;
+            width: 90%;
+            text-align: center;
+        }
+
+        body.dark-theme .modal {
+            background: #1e293b;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -456,6 +546,7 @@
             ru: {
                 appTitle: "Check&Calm",
                 addObject: "+ Добавить объект",
+                completeCheck: "✅ Завершить проверку",
                 objectName: "Наименование объекта",
                 roomName: "Наименование помещения",
                 addRoom: "+ Добавить помещение",
@@ -464,7 +555,6 @@
                 addCustom: "+ Другое",
                 saveObject: "Сохранить объект",
                 deleteObject: "Удалить объект",
-                deleteAllObjects: "Удалить ВСЕ объекты",
                 done: "Готово",
                 reset: "Сбросить проверку",
                 allOff: "✅ ВСЁ ВЫКЛЮЧЕНО",
@@ -474,11 +564,14 @@
                 themeLight: "☀️ Светлая",
                 themeDark: "🌙 Тёмная",
                 confirmDelete: "Удалить этот объект?",
-                confirmDeleteAll: "Удалить ВСЕ объекты? Это действие нельзя отменить."
+                confirmReset: "Сбросить все проверки? Все отметки будут удалены.",
+                yes: "Да",
+                no: "Нет"
             },
             en: {
                 appTitle: "Check&Calm",
                 addObject: "+ Add Place",
+                completeCheck: "✅ Complete Check",
                 objectName: "Place Name",
                 roomName: "Room Name",
                 addRoom: "+ Add Room",
@@ -487,7 +580,6 @@
                 addCustom: "+ Other",
                 saveObject: "Save Place",
                 deleteObject: "Delete Place",
-                deleteAllObjects: "Delete ALL Places",
                 done: "Done",
                 reset: "Reset Check",
                 allOff: "✅ EVERYTHING IS OFF",
@@ -497,7 +589,9 @@
                 themeLight: "☀️ Light",
                 themeDark: "🌙 Dark",
                 confirmDelete: "Delete this place?",
-                confirmDeleteAll: "Delete ALL places? This cannot be undone."
+                confirmReset: "Reset all checks? All marks will be removed.",
+                yes: "Yes",
+                no: "No"
             }
         };
 
@@ -506,23 +600,31 @@
         let isDarkTheme = localStorage.getItem("theme_dark") === "true";
         let showAddForm = false;
         let editingObjectId = null;
+        let showCompleteScreen = false;
+        let lastCompleteTime = null;
 
         function t(key) { return translations[lang][key] || translations.ru[key]; }
 
         function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 8); }
 
         function loadData() {
-            const saved = localStorage.getItem("check_calm_app_v3");
+            const saved = localStorage.getItem("check_calm_app_v4");
             if(saved) {
-                objects = JSON.parse(saved);
+                const data = JSON.parse(saved);
+                objects = data.objects || [];
+                showCompleteScreen = data.showCompleteScreen || false;
+                lastCompleteTime = data.lastCompleteTime || null;
             }
         }
 
         function saveData() {
-            localStorage.setItem("check_calm_app_v3", JSON.stringify(objects));
+            localStorage.setItem("check_calm_app_v4", JSON.stringify({
+                objects: objects,
+                showCompleteScreen: showCompleteScreen,
+                lastCompleteTime: lastCompleteTime
+            }));
         }
 
-        // Звуки
         let audioCtx = null;
         function initAudio() {
             if (!audioCtx) {
@@ -587,7 +689,6 @@
             renderApp();
         }
 
-        // Временный объект для формы
         let tempObject = {
             name: "",
             rooms: [{ name: "", items: [] }]
@@ -667,6 +768,8 @@
             tempObject = { name: "", rooms: [{ name: "", items: [] }] };
             showAddForm = false;
             editingObjectId = null;
+            showCompleteScreen = false;
+            lastCompleteTime = null;
             saveData();
             renderApp();
         }
@@ -691,15 +794,8 @@
             if(confirm(t("confirmDelete"))) {
                 objects = objects.filter(o => o.id !== objId);
                 playSound('click');
-                saveData();
-                renderApp();
-            }
-        }
-
-        function deleteAllObjects() {
-            if(objects.length > 0 && confirm(t("confirmDeleteAll"))) {
-                objects = [];
-                playSound('click');
+                showCompleteScreen = false;
+                lastCompleteTime = null;
                 saveData();
                 renderApp();
             }
@@ -726,7 +822,9 @@
             renderApp();
         }
 
-        function toggleItemCheck(objId, roomId, itemId) {
+        function toggleItemCheck(objId, roomId, itemId, event) {
+            event.stopPropagation();
+            
             const obj = objects.find(o => o.id === objId);
             if(obj) {
                 const room = obj.rooms.find(r => r.id === roomId);
@@ -741,8 +839,9 @@
                         } else {
                             item.lastCheck = null;
                         }
-                        // Сбрасываем статус "Всё выключено" при изменении
                         obj.allCheckedTime = null;
+                        showCompleteScreen = false;
+                        lastCompleteTime = null;
                         saveData();
                         renderApp();
                     }
@@ -770,6 +869,8 @@
                             lastCheck: null
                         });
                         obj.allCheckedTime = null;
+                        showCompleteScreen = false;
+                        lastCompleteTime = null;
                         playSound('click');
                         saveData();
                         renderApp();
@@ -778,78 +879,74 @@
             }
         }
 
-        function deleteItem(objId, roomId, itemId) {
-            const obj = objects.find(o => o.id === objId);
-            if(obj) {
-                const room = obj.rooms.find(r => r.id === roomId);
-                if(room) {
-                    room.items = room.items.filter(i => i.id !== itemId);
-                    obj.allCheckedTime = null;
-                    saveData();
-                    renderApp();
+        function deleteItem(objId, roomId, itemId, event) {
+            event.stopPropagation();
+            
+            if(confirm("Удалить этот элемент?")) {
+                const obj = objects.find(o => o.id === objId);
+                if(obj) {
+                    const room = obj.rooms.find(r => r.id === roomId);
+                    if(room) {
+                        room.items = room.items.filter(i => i.id !== itemId);
+                        obj.allCheckedTime = null;
+                        showCompleteScreen = false;
+                        lastCompleteTime = null;
+                        playSound('click');
+                        saveData();
+                        renderApp();
+                    }
                 }
             }
         }
 
-        function checkAllAndDone(objId) {
-            const obj = objects.find(o => o.id === objId);
-            if(!obj) return;
-            
+        function checkAllItems() {
             let allChecked = true;
-            const uncheckedItems = [];
             
-            for(let room of obj.rooms) {
-                for(let item of room.items) {
-                    if(!item.checked) {
-                        allChecked = false;
-                        uncheckedItems.push({ roomId: room.id, itemId: item.id });
-                    }
-                }
-            }
-            
-            if(allChecked && obj.rooms.length > 0 && obj.rooms.some(r => r.items.length > 0)) {
-                obj.allCheckedTime = new Date().toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
-                playSound('success');
-                vibrate();
-                saveData();
-                renderApp();
-            } else {
-                playSound('error');
-                alert(t("checkAll"));
-                // Подсветка непроверенных элементов
-                setTimeout(() => {
-                    for(let u of uncheckedItems) {
-                        const element = document.querySelector(`[data-item-id="${u.itemId}"]`);
-                        if(element) {
-                            element.classList.add('highlight');
-                            setTimeout(() => element.classList.remove('highlight'), 1000);
-                        }
-                    }
-                }, 100);
-            }
-        }
-
-        function resetCheck(objId) {
-            const obj = objects.find(o => o.id === objId);
-            if(obj) {
+            for(let obj of objects) {
                 for(let room of obj.rooms) {
                     for(let item of room.items) {
-                        item.checked = false;
-                        item.lastCheck = null;
+                        if(!item.checked) {
+                            allChecked = false;
+                            const element = document.querySelector(`[data-item-id="${item.id}"]`);
+                            if(element) {
+                                element.classList.add('highlight');
+                                setTimeout(() => element.classList.remove('highlight'), 1000);
+                            }
+                        }
                     }
                 }
-                obj.allCheckedTime = null;
+            }
+            
+            if(allChecked && objects.length > 0) {
+                playSound('success');
+                vibrate();
+                showCompleteScreen = true;
+                lastCompleteTime = new Date().toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+                saveData();
+                renderApp();
+            } else if(objects.length > 0) {
+                playSound('error');
+                alert(t("checkAll"));
+            }
+        }
+
+        function resetAllChecks() {
+            if(confirm(t("confirmReset"))) {
+                for(let obj of objects) {
+                    for(let room of obj.rooms) {
+                        for(let item of room.items) {
+                            item.checked = false;
+                            item.lastCheck = null;
+                        }
+                    }
+                    obj.allCheckedTime = null;
+                }
+                showCompleteScreen = false;
+                lastCompleteTime = null;
                 playSound('click');
                 vibrate();
                 saveData();
                 renderApp();
-            }
-        }
-
-        function toggleObject(objId) {
-            const content = document.getElementById(`rooms-${objId}`);
-            if(content) {
-                content.classList.toggle('open');
             }
         }
 
@@ -876,8 +973,14 @@
                 </div>
             `;
 
-            if(showAddForm) {
-                // Форма добавления/редактирования
+            if(showCompleteScreen && objects.length > 0) {
+                html += `<div class="card" style="text-align:center;">
+                    <div class="done-title" style="font-size:2.8rem;">${t("allOff")}</div>
+                    <div class="done-time" style="font-size:1.2rem; margin:20px 0;">📅 ${lastCompleteTime}</div>
+                    <button class="btn-danger" id="resetAllBtn">🔄 ${t("reset")}</button>
+                </div>`;
+            }
+            else if(showAddForm) {
                 html += `<div class="card">
                     <div class="form-group">
                         <label>${t("objectName")}</label>
@@ -887,12 +990,14 @@
                 for(let i = 0; i < tempObject.rooms.length; i++) {
                     html += `<div class="room-block">
                         <div class="room-title">
-                            <input type="text" placeholder="${t("roomName")}" value="${escapeHtml(tempObject.rooms[i].name)}" data-room-index="${i}" class="room-name-input" style="flex:1; margin-right:8px;">
+                            <input type="text" class="room-name-input" placeholder="${t("roomName")}" value="${escapeHtml(tempObject.rooms[i].name)}" data-room-index="${i}" style="flex:1;">
                         </div>`;
                     
                     for(let item of tempObject.rooms[i].items) {
-                        html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:5px 0; padding:5px 8px; background:#e2e8f0; border-radius:8px;">
-                            <span>${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '📎'} ${escapeHtml(item.name)}</span>
+                        html += `<div class="check-item" style="justify-content:space-between;">
+                            <div class="item-info">
+                                <div class="item-name-display">${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '📎'} ${escapeHtml(item.name)}</div>
+                            </div>
                         </div>`;
                     }
                     
@@ -913,7 +1018,6 @@
                 </div>`;
             } 
             else if(objects.length === 0) {
-                // Пустой экран — только кнопка добавления
                 html += `<div class="empty-state">
                     <div class="empty-state-icon">🏠</div>
                     <button class="pulse-btn" id="addFirstObjectBtn">${t("addObject")}</button>
@@ -921,20 +1025,10 @@
                 html += `<div class="limit-info">${t("limitInfo")}</div>`;
             } 
             else {
-                // Список объектов
                 html += `<div class="limit-info" style="margin-bottom: 16px;">${t("limitInfo")} (${objects.length}/3)</div>`;
-                
-                if(objects.length > 1) {
-                    html += `<div style="margin-bottom: 16px;">
-                        <button class="btn-danger" id="deleteAllObjectsBtn" style="padding:10px; font-size:0.9rem;">🗑 ${t("deleteAllObjects")}</button>
-                    </div>`;
-                }
-                
                 html += `<div class="object-list">`;
                 
                 for(let obj of objects) {
-                    const allChecked = obj.allCheckedTime;
-                    
                     html += `<div class="object-item">
                         <div class="object-header" data-toggle-object="${obj.id}">
                             <span class="object-name">🏠 ${escapeHtml(obj.name)}</span>
@@ -952,7 +1046,7 @@
                     for(let room of obj.rooms) {
                         html += `<div class="room-block">
                             <div class="room-title">
-                                📍 ${escapeHtml(room.name)}
+                                <span>📍 ${escapeHtml(room.name)}</span>
                             </div>`;
                         
                         if(room.items.length === 0) {
@@ -964,11 +1058,11 @@
                             const timeStr = item.lastCheck ? `✅ ${item.lastCheck}` : "—";
                             
                             html += `<div class="check-item" data-item-id="${item.id}">
-                                <div style="flex:1;">
-                                    <strong>${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '🔥'} ${escapeHtml(item.name)}</strong>
-                                    <div style="font-size:0.7rem; color:#64748b;">${timeStr}</div>
+                                <div class="item-info">
+                                    <div class="item-name-display">${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '🔥'} ${escapeHtml(item.name)}</div>
+                                    <div class="item-time">${timeStr}</div>
                                 </div>
-                                <div style="display:flex; gap:8px; align-items:center;">
+                                <div class="item-actions">
                                     <button class="check-btn-small ${isChecked ? 'checked' : ''}" data-toggle="${obj.id}|${room.id}|${item.id}">${isChecked ? "✓" : "○"}</button>
                                     <button class="btn-secondary" data-delete-item="${obj.id}|${room.id}|${item.id}" style="padding:5px 10px;">🗑</button>
                                 </div>
@@ -983,20 +1077,22 @@
                         </div>`;
                     }
                     
-                    if(allChecked) {
-                        html += `<div class="done-section">
-                            <div class="done-title">${t("allOff")}</div>
-                            <div class="done-time">📅 ${allChecked}</div>
-                            <button class="btn-secondary" data-reset="${obj.id}" style="background:white; color:#16a34a;">🔄 ${t("reset")}</button>
-                        </div>`;
-                    } else {
-                        html += `<div class="button-group" style="margin-top:16px;">
-                            <button class="btn-primary" data-done="${obj.id}">✅ ${t("done")}</button>
-                            <button class="btn-danger" data-reset="${obj.id}">🔄 ${t("reset")}</button>
-                        </div>`;
-                    }
-                    
                     html += `</div></div>`;
+                }
+                
+                let allChecked = true;
+                for(let obj of objects) {
+                    for(let room of obj.rooms) {
+                        for(let item of room.items) {
+                            if(!item.checked) allChecked = false;
+                        }
+                    }
+                }
+                
+                if(allChecked && objects.length > 0 && !showCompleteScreen) {
+                    html += `<button class="btn-success" id="completeCheckBtn">${t("completeCheck")}</button>`;
+                } else if(!showCompleteScreen) {
+                    html += `<button class="btn-primary" id="completeCheckBtn" style="background: #64748b;">${t("completeCheck")}</button>`;
                 }
                 
                 html += `<button class="btn-primary" id="addObjectFromListBtn" style="margin-top:20px;">➕ ${t("addObject")}</button>`;
@@ -1009,6 +1105,8 @@
             // Привязка событий
             document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
             document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
+            document.getElementById("resetAllBtn")?.addEventListener("click", () => resetAllChecks());
+            document.getElementById("completeCheckBtn")?.addEventListener("click", () => checkAllItems());
             
             document.getElementById("addFirstObjectBtn")?.addEventListener("click", () => startAddObject());
             document.getElementById("addObjectFromListBtn")?.addEventListener("click", () => {
@@ -1023,7 +1121,6 @@
             document.getElementById("saveObjectBtn")?.addEventListener("click", () => saveObject());
             document.getElementById("deleteCurrentObjectBtn")?.addEventListener("click", () => deleteCurrentObject());
             document.getElementById("cancelAddBtn")?.addEventListener("click", () => cancelAdd());
-            document.getElementById("deleteAllObjectsBtn")?.addEventListener("click", () => deleteAllObjects());
             
             document.querySelectorAll(".room-name-input").forEach(inp => {
                 inp.addEventListener("change", (e) => {
@@ -1046,7 +1143,10 @@
             document.querySelectorAll("[data-toggle-object]").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     const objId = btn.getAttribute("data-toggle-object");
-                    if(objId) toggleObject(objId);
+                    if(objId) {
+                        const content = document.getElementById(`rooms-${objId}`);
+                        if(content) content.classList.toggle('open');
+                    }
                     e.stopPropagation();
                 });
             });
@@ -1073,7 +1173,7 @@
                     const val = btn.getAttribute("data-toggle");
                     if(val) {
                         const [objId, roomId, itemId] = val.split("|");
-                        toggleItemCheck(objId, roomId, itemId);
+                        toggleItemCheck(objId, roomId, itemId, e);
                     }
                     e.stopPropagation();
                 });
@@ -1095,24 +1195,8 @@
                     const val = btn.getAttribute("data-delete-item");
                     if(val) {
                         const [objId, roomId, itemId] = val.split("|");
-                        deleteItem(objId, roomId, itemId);
+                        deleteItem(objId, roomId, itemId, e);
                     }
-                    e.stopPropagation();
-                });
-            });
-            
-            document.querySelectorAll("[data-done]").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    const objId = btn.getAttribute("data-done");
-                    if(objId) checkAllAndDone(objId);
-                    e.stopPropagation();
-                });
-            });
-            
-            document.querySelectorAll("[data-reset]").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    const objId = btn.getAttribute("data-reset");
-                    if(objId) resetCheck(objId);
                     e.stopPropagation();
                 });
             });
