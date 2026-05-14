@@ -10,13 +10,12 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* СВЕТЛАЯ ТЕМА (по умолчанию) */
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #f1f5f9;
             margin: 0;
-            padding: 0 0 80px 0;
-            color: #0f172a;
+            padding: 0;
+            min-height: 100vh;
             transition: background 0.3s, color 0.3s;
         }
 
@@ -28,98 +27,61 @@
 
         body.dark-theme .header {
             background: #1e293b;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
-        body.dark-theme .object-card {
+        body.dark-theme .card {
             background: #1e293b;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
         }
 
-        body.dark-theme .room-section {
+        body.dark-theme .object-item {
+            background: #334155;
+        }
+
+        body.dark-theme .room-content {
             background: #0f172a;
         }
 
         body.dark-theme .check-item {
-            background: #334155;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background: #1e293b;
         }
 
-        body.dark-theme .secondary {
+        body.dark-theme input, 
+        body.dark-theme textarea {
             background: #334155;
-            color: #e2e8f0;
+            color: #f1f5f9;
+            border-color: #475569;
         }
 
-        body.dark-theme .lang-select {
-            background: #334155;
-            color: #e2e8f0;
-        }
-
-        body.dark-theme .btn-danger {
-            background: #7f1a1a;
+        body.dark-theme .warning {
+            background: #451a1a;
             color: #fecaca;
         }
 
-        body.dark-theme .delete-item {
-            background: #7f1a1a;
-            color: #fecaca;
-        }
-
-        body.dark-theme footer {
-            color: #94a3b8;
-        }
-
-        /* ===== ИСПРАВЛЕНИЕ: читаемый текст в тёмной теме ===== */
-        body.dark-theme input,
-        body.dark-theme .object-name,
-        body.dark-theme .room-title input,
-        body.dark-theme .item-name {
-            color: #f1f5f9 !important;
-            background-color: #334155 !important;
-        }
-
-        body.dark-theme .object-name:focus,
-        body.dark-theme .room-title input:focus,
-        body.dark-theme .item-name:focus {
-            background-color: #475569 !important;
-            outline: 1px solid #818cf8;
-        }
-
-        body.dark-theme .check-item .item-left span {
-            color: #e2e8f0;
-        }
-
-        body.dark-theme .timestamp {
-            color: #cbd5e1;
-            background-color: #475569;
-        }
-        /* ===== КОНЕЦ ИСПРАВЛЕНИЯ ===== */
-
-        /* контейнер */
         .app-container {
             max-width: 600px;
             margin: 0 auto;
             padding: 16px;
+            min-height: 100vh;
         }
 
-        /* шапка */
+        /* Шапка */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             background: white;
-            padding: 12px 16px;
-            border-radius: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 12px 20px;
+            border-radius: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         h1 {
-            font-size: 1.65rem;
+            font-size: 1.8rem;
             margin: 0;
-            font-weight: 600;
+            font-weight: 700;
             background: linear-gradient(135deg, #2c3e66, #1e2a4a);
             -webkit-background-clip: text;
             background-clip: text;
@@ -132,229 +94,314 @@
             background-clip: text;
         }
 
-        .lang-select, .theme-toggle {
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .theme-toggle, .lang-select {
             background: #eef2ff;
             border: none;
-            padding: 8px 12px;
+            padding: 8px 14px;
             border-radius: 40px;
             font-weight: 500;
             cursor: pointer;
             font-size: 0.85rem;
+            transition: all 0.2s;
         }
 
-        /* карточка объекта */
-        .object-card {
+        body.dark-theme .theme-toggle,
+        body.dark-theme .lang-select {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        /* Кнопка добавления с пульсацией */
+        .pulse-btn {
+            display: block;
+            width: 200px;
+            margin: 40px auto;
+            padding: 18px 32px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 8px 25px rgba(34,197,94,0.5);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+            }
+        }
+
+        .pulse-btn:active {
+            transform: scale(0.95);
+        }
+
+        .card {
             background: white;
             border-radius: 28px;
-            padding: 18px;
-            margin-bottom: 24px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1rem;
             transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-danger:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #eef2ff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        body.dark-theme .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .object-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .object-item {
+            background: #f8fafc;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        body.dark-theme .object-item {
+            background: #334155;
         }
 
         .object-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
 
-        body.dark-theme .object-header {
-            border-bottom-color: #475569;
+        .object-header:hover {
+            background: rgba(0,0,0,0.05);
         }
 
         .object-name {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            background: none;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 16px;
-            width: auto;
-            min-width: 120px;
         }
 
-        .object-name:focus {
-            background: #fef9c3;
-            outline: none;
+        .room-content {
+            padding: 0 20px 20px 20px;
+            background: white;
+            display: none;
         }
 
-        .room-section {
-            margin: 20px 0 16px 0;
-            background: #f8fafc;
-            border-radius: 20px;
+        body.dark-theme .room-content {
+            background: #1e293b;
+        }
+
+        .room-content.open {
+            display: block;
+        }
+
+        .room-block {
+            margin: 16px 0;
             padding: 12px;
+            background: #f1f5f9;
+            border-radius: 16px;
+        }
+
+        body.dark-theme .room-block {
+            background: #0f172a;
         }
 
         .room-title {
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin: 0 0 8px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .room-title-row {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #cbd5e1;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .room-title input {
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            background: transparent;
-            padding: 4px 0;
-            border-bottom: 1px dashed #94a3b8;
-            flex: 1;
-        }
-
-        /* Прогресс-бар */
-        .room-progress-container {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        body.dark-theme .room-progress-container {
-            background: #475569;
-        }
-
-        .room-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #22c55e, #16a34a);
-            width: 0%;
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-
-        .room-progress-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 4px;
-            font-size: 0.7rem;
-            color: #475569;
-        }
-
-        body.dark-theme .room-progress-stats {
-            color: #94a3b8;
         }
 
         .check-item {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            background: white;
-            padding: 12px;
+            align-items: center;
+            padding: 10px;
             margin: 8px 0;
-            border-radius: 20px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            background: white;
+            border-radius: 12px;
         }
 
-        .item-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 2;
-            min-width: 140px;
+        body.dark-theme .check-item {
+            background: #334155;
         }
 
-        .item-name {
-            font-weight: 500;
-            border: none;
-            background: #f1f5f9;
-            padding: 6px 10px;
-            border-radius: 20px;
-            width: auto;
-            min-width: 110px;
+        .check-item.highlight {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            animation: shake 0.3s ease;
         }
 
-        .check-control {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
-        .check-btn {
-            width: 44px;
-            height: 44px;
+        .check-btn-small {
+            width: 40px;
+            height: 40px;
             border-radius: 40px;
             border: none;
             background: #e2e8f0;
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.3rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            transform: scale(1);
+            transition: all 0.2s;
         }
 
-        .check-btn:active {
-            transform: scale(0.92);
-        }
-
-        .check-btn.checked {
+        .check-btn-small.checked {
             background: #22c55e;
             color: white;
         }
 
-        .timestamp {
-            font-size: 0.7rem;
-            color: #475569;
-            background: #f1f5f9;
-            padding: 4px 8px;
-            border-radius: 20px;
-            transition: opacity 0.3s;
+        .add-item-btn {
+            background: none;
+            border: 1px dashed #94a3b8;
+            padding: 8px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            width: 100%;
         }
 
-        .delete-item {
-            background: #fee2e2;
-            border: none;
+        .done-section {
+            text-align: center;
+            margin-top: 24px;
+            padding: 24px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 28px;
+            color: white;
+        }
+
+        .done-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+        }
+
+        .done-time {
             font-size: 1rem;
-            border-radius: 30px;
-            padding: 6px 12px;
-            cursor: pointer;
-            color: #b91c1c;
+            opacity: 0.9;
+            margin-bottom: 20px;
         }
 
-        .add-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-
-        button.secondary {
-            background: #eef2ff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .btn-danger {
-            background: #ffe4e4;
-            color: #b91c1c;
-        }
-
-        .global-actions {
-            display: flex;
-            gap: 12px;
+        .warning {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
             margin: 16px 0;
-            flex-wrap: wrap;
+        }
+
+        body.dark-theme .warning {
+            background: #451a1a;
+            color: #fecaca;
+        }
+
+        .limit-info {
+            text-align: center;
+            padding: 12px;
+            background: #e0e7ff;
+            border-radius: 16px;
+            margin-top: 16px;
         }
 
         footer {
@@ -362,482 +409,633 @@
             font-size: 0.7rem;
             color: #64748b;
             margin-top: 30px;
-        }
-
-        @media (max-width: 500px) {
-            .check-item {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .item-left {
-                width: 100%;
-            }
-            .check-control {
-                justify-content: space-between;
-            }
+            padding: 20px;
         }
     </style>
 </head>
 <body>
     <div class="app-container" id="app"></div>
 
-<script>
-    // ---------- ЯЗЫКИ ----------
-    const translations = {
-        ru: {
-            appTitle: "Check&Calm",
-            addObject: "+ Добавить объект",
-            deleteObject: "Удалить объект",
-            addRoom: "+ Комната",
-            addSocket: "+ Розетка",
-            addSwitch: "+ Выключатель",
-            addGas: "+ Газовый прибор",
-            checkedLabel: "✅",
-            uncheckLabel: "⬜",
-            delete: "🗑 Удалить",
-            confirmDeleteObj: "Удалить объект и все комнаты?",
-            placeholderObjName: "Квартира / Дача",
-            placeholderRoomName: "Название комнаты",
-            defaultSocketName: "Розетка",
-            defaultSwitchName: "Выключатель",
-            defaultGasName: "Газ",
-            noObjects: "Нет объектов. Нажмите «+ Добавить объект»",
-            themeLight: "☀️ Светлая",
-            themeDark: "🌙 Тёмная",
-            progress: "Прогресс"
-        },
-        en: {
-            appTitle: "Check&Calm",
-            addObject: "+ Add place",
-            deleteObject: "Delete place",
-            addRoom: "+ Room",
-            addSocket: "+ Outlet",
-            addSwitch: "+ Switch",
-            addGas: "+ Gas appliance",
-            checkedLabel: "✅",
-            uncheckLabel: "⬜",
-            delete: "🗑 Delete",
-            confirmDeleteObj: "Delete place and all rooms?",
-            placeholderObjName: "Apartment / Cottage",
-            placeholderRoomName: "Room name",
-            defaultSocketName: "Outlet",
-            defaultSwitchName: "Switch",
-            defaultGasName: "Gas",
-            noObjects: "No places. Press '+ Add place'",
-            themeLight: "☀️ Light",
-            themeDark: "🌙 Dark",
-            progress: "Progress"
+    <script>
+        // ---------- ПЕРЕВОДЫ ----------
+        const translations = {
+            ru: {
+                appTitle: "Check&Calm",
+                addObject: "+ Добавить объект",
+                objectName: "Наименование объекта",
+                roomName: "Наименование помещения",
+                addRoom: "+ Добавить помещение",
+                addSocket: "+ Розетка",
+                addSwitch: "+ Выключатель",
+                addCustom: "+ Другое",
+                saveObject: "Сохранить объект",
+                deleteObject: "Удалить объект",
+                done: "Готово",
+                reset: "Сбросить проверку",
+                allOff: "✅ ВСЁ ВЫКЛЮЧЕНО",
+                limitWarning: "⚠️ В бесплатной версии можно добавить только 3 объекта. Для добавления большего количества приобретите Premium версию.",
+                limitInfo: "📱 Бесплатная версия: максимум 3 объекта",
+                checkAll: "Пожалуйста, проверьте все пункты!",
+                themeLight: "☀️ Светлая",
+                themeDark: "🌙 Тёмная"
+            },
+            en: {
+                appTitle: "Check&Calm",
+                addObject: "+ Add Place",
+                objectName: "Place Name",
+                roomName: "Room Name",
+                addRoom: "+ Add Room",
+                addSocket: "+ Outlet",
+                addSwitch: "+ Switch",
+                addCustom: "+ Other",
+                saveObject: "Save Place",
+                deleteObject: "Delete Place",
+                done: "Done",
+                reset: "Reset Check",
+                allOff: "✅ EVERYTHING IS OFF",
+                limitWarning: "⚠️ Free version allows max 3 objects. Upgrade to Premium for more.",
+                limitInfo: "📱 Free version: max 3 objects",
+                checkAll: "Please check all items!",
+                themeLight: "☀️ Light",
+                themeDark: "🌙 Dark"
+            }
+        };
+
+        let lang = localStorage.getItem("app_lang") || "ru";
+        let objects = [];
+        let isDarkTheme = localStorage.getItem("theme_dark") === "true";
+        let showAddForm = false;
+        let editingObjectId = null;
+        let currentRoomIndex = 0;
+
+        function t(key) { return translations[lang][key] || translations.ru[key]; }
+
+        // Генерация ID
+        function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 8); }
+
+        // Загрузка данных
+        function loadData() {
+            const saved = localStorage.getItem("check_calm_app_v2");
+            if(saved) {
+                objects = JSON.parse(saved);
+            }
         }
-    };
 
-    let lang = localStorage.getItem("app_lang") || "ru";
-    let objects = [];
+        function saveData() {
+            localStorage.setItem("check_calm_app_v2", JSON.stringify(objects));
+        }
 
-    // Генерация ID
-    function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 6); }
+        // Звуки
+        function playSound(type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if(type === 'click') {
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.value = 0.1;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.15);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                } else if(type === 'success') {
+                    oscillator.frequency.value = 523.25;
+                    gainNode.gain.value = 0.15;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } else if(type === 'error') {
+                    oscillator.frequency.value = 440;
+                    gainNode.gain.value = 0.15;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                }
+                audioContext.resume();
+            } catch(e) { console.log("Audio not supported"); }
+        }
 
-    // Загрузка данных
-    function loadData() {
-        const saved = localStorage.getItem("check_calm_app");
-        if(saved) {
-            objects = JSON.parse(saved);
-        } else {
-            objects = [{
-                id: genId(),
-                name: "Моя квартира",
-                rooms: [
-                    {
+        function vibrate() {
+            if(navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // Тема
+        function applyTheme() {
+            if(isDarkTheme) {
+                document.body.classList.add("dark-theme");
+            } else {
+                document.body.classList.remove("dark-theme");
+            }
+            localStorage.setItem("theme_dark", isDarkTheme);
+            renderApp();
+        }
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            applyTheme();
+        }
+
+        function setLanguage(l) {
+            lang = l;
+            localStorage.setItem("app_lang", lang);
+            renderApp();
+        }
+
+        // Добавление/удаление объектов
+        let tempObject = {
+            name: "",
+            rooms: [{ name: "", items: [] }]
+        };
+
+        function addRoomToTemp() {
+            tempObject.rooms.push({ name: "", items: [] });
+            renderApp();
+        }
+
+        function addItemToTemp(roomIndex, type) {
+            let defaultName = "";
+            if(type === 'socket') defaultName = "Розетка";
+            else if(type === 'switch') defaultName = "Выключатель";
+            else defaultName = "Прибор";
+            
+            const customName = prompt(`Введите название ${defaultName}:`, defaultName);
+            if(customName) {
+                tempObject.rooms[roomIndex].items.push({
+                    id: genId(),
+                    type: type,
+                    name: customName,
+                    checked: false,
+                    lastCheck: null
+                });
+                renderApp();
+            }
+        }
+
+        function saveObject() {
+            if(!tempObject.name.trim()) {
+                alert("Введите название объекта!");
+                return;
+            }
+            
+            const validRooms = tempObject.rooms.filter(r => r.name.trim());
+            if(validRooms.length === 0) {
+                alert("Добавьте хотя бы одно помещение!");
+                return;
+            }
+            
+            if(editingObjectId) {
+                // Редактирование
+                const index = objects.findIndex(o => o.id === editingObjectId);
+                if(index !== -1) {
+                    objects[index] = {
+                        id: editingObjectId,
+                        name: tempObject.name,
+                        rooms: validRooms.map(room => ({
+                            id: room.id || genId(),
+                            name: room.name,
+                            items: room.items || []
+                        })),
+                        allCheckedTime: objects[index].allCheckedTime || null
+                    };
+                }
+                editingObjectId = null;
+            } else {
+                // Новый объект
+                if(objects.length >= 3) {
+                    alert(t("limitWarning"));
+                    return;
+                }
+                objects.push({
+                    id: genId(),
+                    name: tempObject.name,
+                    rooms: validRooms.map(room => ({
                         id: genId(),
-                        name: "Кухня",
-                        items: [
-                            { id: genId(), type: "socket", name: "Розетка (чайник)", checked: false, lastCheck: null },
-                            { id: genId(), type: "switch", name: "Выключатель света", checked: false, lastCheck: null }
-                        ]
-                    },
-                    {
-                        id: genId(),
-                        name: "Зал",
-                        items: [
-                            { id: genId(), type: "socket", name: "Розетка ТВ", checked: false, lastCheck: null },
-                            { id: genId(), type: "gas", name: "Газ. плита", checked: false, lastCheck: null }
-                        ]
-                    }
-                ]
-            }];
-        }
-    }
-
-    function saveData() {
-        localStorage.setItem("check_calm_app", JSON.stringify(objects));
-    }
-
-    function t(key) { return translations[lang][key] || translations.ru[key] || key; }
-
-    // Тёмная тема
-    let isDarkTheme = localStorage.getItem("theme_dark") === "true";
-    function applyTheme() {
-        if(isDarkTheme) {
-            document.body.classList.add("dark-theme");
-        } else {
-            document.body.classList.remove("dark-theme");
-        }
-        localStorage.setItem("theme_dark", isDarkTheme);
-    }
-    function toggleTheme() {
-        isDarkTheme = !isDarkTheme;
-        applyTheme();
-        renderApp();
-    }
-
-    // Звук
-    function playClickSound() {
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            oscillator.frequency.value = 880;
-            gainNode.gain.value = 0.1;
-            oscillator.start();
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
-            oscillator.stop(audioContext.currentTime + 0.2);
-            audioContext.resume();
-        } catch(e) { console.log("Audio not supported"); }
-    }
-
-    function vibrate() {
-        if(navigator.vibrate) navigator.vibrate(50);
-    }
-
-    function setLanguage(l) {
-        lang = l;
-        localStorage.setItem("app_lang", lang);
-        renderApp();
-    }
-
-    function addObject() {
-        objects.push({
-            id: genId(),
-            name: t("placeholderObjName") + " " + (objects.length+1),
-            rooms: []
-        });
-        saveData();
-        renderApp();
-    }
-
-    function deleteObject(objId) {
-        if(confirm(t("confirmDeleteObj"))) {
-            objects = objects.filter(o => o.id !== objId);
+                        name: room.name,
+                        items: room.items || []
+                    })),
+                    allCheckedTime: null
+                });
+            }
+            
+            playSound('success');
+            vibrate();
+            tempObject = { name: "", rooms: [{ name: "", items: [] }] };
+            showAddForm = false;
+            editingObjectId = null;
             saveData();
             renderApp();
         }
-    }
 
-    function addRoom(objId) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) {
-            obj.rooms.push({
-                id: genId(),
-                name: t("placeholderRoomName"),
-                items: []
-            });
-            saveData();
-            renderApp();
-        }
-    }
-
-    function deleteRoom(objId, roomId) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) {
-            obj.rooms = obj.rooms.filter(r => r.id !== roomId);
-            saveData();
-            renderApp();
-        }
-    }
-
-    function addItem(objId, roomId, type) {
-        const obj = objects.find(o => o.id === objId);
-        if(!obj) return;
-        const room = obj.rooms.find(r => r.id === roomId);
-        if(!room) return;
-
-        let defaultName = "";
-        if(type === "socket") defaultName = t("defaultSocketName") + " " + (room.items.filter(i=>i.type==="socket").length+1);
-        if(type === "switch") defaultName = t("defaultSwitchName") + " " + (room.items.filter(i=>i.type==="switch").length+1);
-        if(type === "gas") defaultName = t("defaultGasName") + " " + (room.items.filter(i=>i.type==="gas").length+1);
-
-        room.items.push({
-            id: genId(),
-            type: type,
-            name: defaultName,
-            checked: false,
-            lastCheck: null
-        });
-        saveData();
-        renderApp();
-    }
-
-    function deleteItem(objId, roomId, itemId) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) {
-            const room = obj.rooms.find(r => r.id === roomId);
-            if(room) {
-                room.items = room.items.filter(i => i.id !== itemId);
+        function deleteObjectFromList(objId) {
+            if(confirm("Удалить этот объект?")) {
+                objects = objects.filter(o => o.id !== objId);
                 saveData();
                 renderApp();
             }
         }
-    }
 
-    function toggleCheck(objId, roomId, itemId) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) {
-            const room = obj.rooms.find(r => r.id === roomId);
-            if(room) {
-                const item = room.items.find(i => i.id === itemId);
-                if(item) {
-                    item.checked = !item.checked;
-                    if(item.checked) {
-                        item.lastCheck = new Date().toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
-                        playClickSound();
-                        vibrate();
-                    } else {
-                        item.lastCheck = null;
+        function editObject(obj) {
+            editingObjectId = obj.id;
+            tempObject = {
+                name: obj.name,
+                rooms: obj.rooms.map(r => ({
+                    id: r.id,
+                    name: r.name,
+                    items: [...r.items]
+                }))
+            };
+            showAddForm = true;
+            renderApp();
+        }
+
+        function cancelAdd() {
+            tempObject = { name: "", rooms: [{ name: "", items: [] }] };
+            showAddForm = false;
+            editingObjectId = null;
+            renderApp();
+        }
+
+        // Отметка проверки
+        function toggleItemCheck(objId, roomId, itemId) {
+            const obj = objects.find(o => o.id === objId);
+            if(obj) {
+                const room = obj.rooms.find(r => r.id === roomId);
+                if(room) {
+                    const item = room.items.find(i => i.id === itemId);
+                    if(item) {
+                        item.checked = !item.checked;
+                        if(item.checked) {
+                            item.lastCheck = new Date().toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+                            playSound('click');
+                            vibrate();
+                        } else {
+                            item.lastCheck = null;
+                        }
+                        obj.allCheckedTime = null;
+                        saveData();
+                        renderApp();
                     }
+                }
+            }
+        }
+
+        function addItemToExisting(objId, roomId, type) {
+            const obj = objects.find(o => o.id === objId);
+            if(obj) {
+                const room = obj.rooms.find(r => r.id === roomId);
+                if(room) {
+                    let defaultName = "";
+                    if(type === 'socket') defaultName = "Розетка " + (room.items.filter(i => i.type === 'socket').length + 1);
+                    else if(type === 'switch') defaultName = "Выключатель " + (room.items.filter(i => i.type === 'switch').length + 1);
+                    else defaultName = "Прибор " + (room.items.filter(i => i.type === 'custom').length + 1);
+                    
+                    const customName = prompt(`Введите название:`, defaultName);
+                    if(customName) {
+                        room.items.push({
+                            id: genId(),
+                            type: type,
+                            name: customName,
+                            checked: false,
+                            lastCheck: null
+                        });
+                        saveData();
+                        renderApp();
+                    }
+                }
+            }
+        }
+
+        function deleteItem(objId, roomId, itemId) {
+            const obj = objects.find(o => o.id === objId);
+            if(obj) {
+                const room = obj.rooms.find(r => r.id === roomId);
+                if(room) {
+                    room.items = room.items.filter(i => i.id !== itemId);
                     saveData();
                     renderApp();
                 }
             }
         }
-    }
 
-    function renameItem(objId, roomId, itemId, newName) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) {
-            const room = obj.rooms.find(r => r.id === roomId);
-            if(room) {
-                const item = room.items.find(i => i.id === itemId);
-                if(item) item.name = newName;
+        function checkAllAndDone(objId) {
+            const obj = objects.find(o => o.id === objId);
+            if(!obj) return;
+            
+            let allChecked = true;
+            const uncheckedItems = [];
+            
+            for(let room of obj.rooms) {
+                for(let item of room.items) {
+                    if(!item.checked) {
+                        allChecked = false;
+                        uncheckedItems.push({ roomId: room.id, itemId: item.id });
+                    }
+                }
+            }
+            
+            if(allChecked) {
+                obj.allCheckedTime = new Date().toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+                playSound('success');
+                vibrate();
+                saveData();
+                renderApp();
+            } else {
+                playSound('error');
+                alert(t("checkAll"));
+                // Подсветка непроверенных элементов
+                for(let u of uncheckedItems) {
+                    const element = document.querySelector(`[data-item-id="${u.itemId}"]`);
+                    if(element) {
+                        element.classList.add('highlight');
+                        setTimeout(() => element.classList.remove('highlight'), 1000);
+                    }
+                }
+            }
+        }
+
+        function resetCheck(objId) {
+            const obj = objects.find(o => o.id === objId);
+            if(obj) {
+                for(let room of obj.rooms) {
+                    for(let item of room.items) {
+                        item.checked = false;
+                        item.lastCheck = null;
+                    }
+                }
+                obj.allCheckedTime = null;
+                playSound('click');
                 saveData();
                 renderApp();
             }
         }
-    }
 
-    function renameRoom(objId, roomId, newName) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) {
-            const room = obj.rooms.find(r => r.id === roomId);
-            if(room) room.name = newName;
-            saveData();
-            renderApp();
-        }
-    }
-
-    function renameObject(objId, newName) {
-        const obj = objects.find(o => o.id === objId);
-        if(obj) obj.name = newName;
-        saveData();
-        renderApp();
-    }
-
-    function getRoomProgress(room) {
-        const total = room.items.length;
-        const checked = room.items.filter(i => i.checked).length;
-        const percent = total === 0 ? 0 : (checked / total) * 100;
-        return { total, checked, percent };
-    }
-
-    function escapeHtml(str) {
-        if(!str) return "";
-        return str.replace(/[&<>]/g, function(m) {
-            if(m === '&') return '&amp;';
-            if(m === '<') return '&lt;';
-            if(m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    function renderApp() {
-        const appDiv = document.getElementById("app");
-        if(!appDiv) return;
-
-        let html = `
-            <div class="header">
-                <h1>${t("appTitle")}</h1>
-                <div style="display: flex; gap: 8px;">
-                    <button class="theme-toggle" id="themeToggleBtn">${isDarkTheme ? t("themeLight") : t("themeDark")}</button>
-                    <select class="lang-select" id="langSelect">
-                        <option value="ru" ${lang === "ru" ? "selected" : ""}>🇷🇺 Русский</option>
-                        <option value="en" ${lang === "en" ? "selected" : ""}>🇬🇧 English</option>
-                    </select>
-                </div>
-            </div>
-            <div class="global-actions">
-                <button class="secondary" id="addObjectBtn">➕ ${t("addObject")}</button>
-            </div>
-        `;
-
-        if(objects.length === 0) {
-            html += `<div style="text-align:center; padding: 40px; background:white; border-radius: 28px;">${t("noObjects")}</div>`;
-        } else {
-            for(let obj of objects) {
-                html += `<div class="object-card" data-objid="${obj.id}">
-                    <div class="object-header">
-                        <input type="text" class="object-name" value="${escapeHtml(obj.name)}" data-objid="${obj.id}" data-field="objname" placeholder="${t("placeholderObjName")}">
-                        <button class="secondary btn-danger" data-deleteobj="${obj.id}">🗑 ${t("deleteObject")}</button>
-                    </div>`;
-
-                for(let room of obj.rooms) {
-                    const progress = getRoomProgress(room);
-                    html += `<div class="room-section" data-roomid="${room.id}" data-objid="${obj.id}">
-                        <div class="room-title">
-                            <div class="room-title-row">
-                                <input type="text" value="${escapeHtml(room.name)}" data-objid="${obj.id}" data-roomid="${room.id}" data-field="roomname" placeholder="${t("placeholderRoomName")}">
-                                <button class="secondary" data-deleteroom="${obj.id}|${room.id}">🗑</button>
-                            </div>
-                            <div class="room-progress-container">
-                                <div class="room-progress-bar" style="width: ${progress.percent}%"></div>
-                            </div>
-                            <div class="room-progress-stats">
-                                <span>📊 ${t("progress")}</span>
-                                <span>${progress.checked}/${progress.total} (${Math.round(progress.percent)}%)</span>
-                            </div>
-                        </div>`;
-
-                    for(let item of room.items) {
-                        let itemTypeIcon = "";
-                        if(item.type === "socket") itemTypeIcon = "🔌";
-                        if(item.type === "switch") itemTypeIcon = "💡";
-                        if(item.type === "gas") itemTypeIcon = "🔥";
-
-                        const isChecked = item.checked;
-                        const timeStr = item.lastCheck ? (lang === "ru" ? `✅ ${item.lastCheck}` : `✅ ${item.lastCheck}`) : "—";
-
-                        html += `<div class="check-item" data-itemid="${item.id}">
-                            <div class="item-left">
-                                <span>${itemTypeIcon}</span>
-                                <input type="text" class="item-name" value="${escapeHtml(item.name)}" data-objid="${obj.id}" data-roomid="${room.id}" data-itemid="${item.id}" data-field="itemname">
-                            </div>
-                            <div class="check-control">
-                                <button class="check-btn ${isChecked ? 'checked' : ''}" data-toggle="${obj.id}|${room.id}|${item.id}">${isChecked ? "✓" : "○"}</button>
-                                <span class="timestamp">${timeStr}</span>
-                                <button class="delete-item" data-deleteitem="${obj.id}|${room.id}|${item.id}">${t("delete")}</button>
-                            </div>
-                        </div>`;
-                    }
-
-                    html += `<div class="add-buttons">
-                        <button class="secondary" data-additem="${obj.id}|${room.id}|socket">➕ ${t("addSocket")}</button>
-                        <button class="secondary" data-additem="${obj.id}|${room.id}|switch">💡 ${t("addSwitch")}</button>
-                        <button class="secondary" data-additem="${obj.id}|${room.id}|gas">🔥 ${t("addGas")}</button>
-                    </div>
-                    </div>`;
-                }
-
-                html += `<div class="add-buttons" style="margin-top: 12px;">
-                    <button class="secondary" data-addroom="${obj.id}">🏠 ${t("addRoom")}</button>
-                </div>
-                </div>`;
+        function toggleObject(objId) {
+            const content = document.getElementById(`rooms-${objId}`);
+            if(content) {
+                content.classList.toggle('open');
             }
         }
 
-        html += `<footer>✅ Отметьте каждый пункт перед выходом. Переименовывайте как удобно.</footer>`;
-        appDiv.innerHTML = html;
+        function renderApp() {
+            const appDiv = document.getElementById("app");
+            if(!appDiv) return;
 
-        document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
-        document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
-        document.getElementById("addObjectBtn")?.addEventListener("click", () => addObject());
+            let html = `
+                <div class="header">
+                    <h1>${t("appTitle")}</h1>
+                    <div class="header-buttons">
+                        <button class="theme-toggle" id="themeToggleBtn">${isDarkTheme ? t("themeLight") : t("themeDark")}</button>
+                        <select class="lang-select" id="langSelect">
+                            <option value="ru" ${lang === "ru" ? "selected" : ""}>🇷🇺 Рус</option>
+                            <option value="en" ${lang === "en" ? "selected" : ""}>🇬🇧 En</option>
+                        </select>
+                    </div>
+                </div>
+            `;
 
-        document.querySelectorAll("[data-deleteobj]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const objId = btn.getAttribute("data-deleteobj");
-                if(objId) deleteObject(objId);
-                e.stopPropagation();
-            });
-        });
-
-        document.querySelectorAll("[data-addroom]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const objId = btn.getAttribute("data-addroom");
-                if(objId) addRoom(objId);
-                e.stopPropagation();
-            });
-        });
-
-        document.querySelectorAll("[data-deleteroom]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const val = btn.getAttribute("data-deleteroom");
-                if(val) {
-                    const [objId, roomId] = val.split("|");
-                    deleteRoom(objId, roomId);
+            if(showAddForm) {
+                // Форма добавления/редактирования объекта
+                html += `<div class="card">
+                    <div class="form-group">
+                        <label>${t("objectName")}</label>
+                        <input type="text" id="objNameInput" value="${escapeHtml(tempObject.name)}" placeholder="Например: Моя квартира">
+                    </div>`;
+                
+                for(let i = 0; i < tempObject.rooms.length; i++) {
+                    html += `<div class="room-block">
+                        <div class="room-title">
+                            <input type="text" placeholder="${t("roomName")}" value="${escapeHtml(tempObject.rooms[i].name)}" data-room-index="${i}" class="room-name-input">
+                        </div>`;
+                    
+                    for(let item of tempObject.rooms[i].items) {
+                        html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:5px 0; padding:5px; background:#e2e8f0; border-radius:8px;">
+                            <span>${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '📎'} ${escapeHtml(item.name)}</span>
+                        </div>`;
+                    }
+                    
+                    html += `<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <button class="btn-secondary" data-add-item-temp="${i}|socket">➕ ${t("addSocket")}</button>
+                        <button class="btn-secondary" data-add-item-temp="${i}|switch">💡 ${t("addSwitch")}</button>
+                        <button class="btn-secondary" data-add-item-temp="${i}|custom">📎 ${t("addCustom")}</button>
+                    </div>
+                    </div>`;
                 }
-                e.stopPropagation();
-            });
-        });
-
-        document.querySelectorAll("[data-additem]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const val = btn.getAttribute("data-additem");
-                if(val) {
-                    const [objId, roomId, type] = val.split("|");
-                    addItem(objId, roomId, type);
+                
+                html += `<button class="btn-secondary" id="addRoomTempBtn" style="width:100%; margin-bottom:16px;">🏠 ${t("addRoom")}</button>
+                    <button class="btn-primary" id="saveObjectBtn">✅ ${t("saveObject")}</button>
+                    <button class="btn-danger" id="cancelAddBtn">🗑 ${t("deleteObject")}</button>
+                </div>`;
+            } else if(objects.length === 0) {
+                // Пустой экран
+                html += `<div style="text-align:center; padding: 40px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🏠</div>
+                    <button class="pulse-btn" id="addFirstObjectBtn">${t("addObject")}</button>
+                </div>`;
+                html += `<div class="limit-info">${t("limitInfo")}</div>`;
+            } else {
+                // Список объектов
+                html += `<div class="limit-info" style="margin-bottom: 16px;">${t("limitInfo")} (${objects.length}/3)</div>`;
+                html += `<div class="object-list">`;
+                
+                for(let obj of objects) {
+                    const allChecked = obj.allCheckedTime;
+                    
+                    html += `<div class="object-item">
+                        <div class="object-header" data-toggle-object="${obj.id}">
+                            <span class="object-name">🏠 ${escapeHtml(obj.name)}</span>
+                            <div>
+                                <button class="btn-secondary" data-edit-object="${obj.id}" style="margin-right:8px;">✏️</button>
+                                <button class="btn-secondary" data-delete-object="${obj.id}">🗑</button>
+                            </div>
+                        </div>
+                        <div class="room-content" id="rooms-${obj.id}">`;
+                    
+                    for(let room of obj.rooms) {
+                        html += `<div class="room-block">
+                            <div class="room-title">
+                                📍 ${escapeHtml(room.name)}
+                            </div>`;
+                        
+                        for(let item of room.items) {
+                            const isChecked = item.checked;
+                            const timeStr = item.lastCheck ? `✅ ${item.lastCheck}` : "—";
+                            
+                            html += `<div class="check-item" data-item-id="${item.id}">
+                                <div style="flex:1;">
+                                    <strong>${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '🔥'} ${escapeHtml(item.name)}</strong>
+                                    <div style="font-size:0.7rem; color:#64748b;">${timeStr}</div>
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <button class="check-btn-small ${isChecked ? 'checked' : ''}" data-toggle="${obj.id}|${room.id}|${item.id}">${isChecked ? "✓" : "○"}</button>
+                                    <button class="btn-secondary" data-delete-item="${obj.id}|${room.id}|${item.id}" style="padding:5px 10px;">🗑</button>
+                                </div>
+                            </div>`;
+                        }
+                        
+                        html += `<div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                            <button class="add-item-btn" data-add-item="${obj.id}|${room.id}|socket">➕ ${t("addSocket")}</button>
+                            <button class="add-item-btn" data-add-item="${obj.id}|${room.id}|switch">💡 ${t("addSwitch")}</button>
+                            <button class="add-item-btn" data-add-item="${obj.id}|${room.id}|custom">📎 ${t("addCustom")}</button>
+                        </div>
+                        </div>`;
+                    }
+                    
+                    if(allChecked) {
+                        html += `<div class="done-section">
+                            <div class="done-title">${t("allOff")}</div>
+                            <div class="done-time">📅 ${allChecked}</div>
+                            <button class="btn-secondary" data-reset="${obj.id}" style="background:white; color:#16a34a;">🔄 ${t("reset")}</button>
+                        </div>`;
+                    } else {
+                        html += `<div style="display:flex; gap:12px; margin-top:16px;">
+                            <button class="btn-primary" data-done="${obj.id}">✅ ${t("done")}</button>
+                            <button class="btn-danger" data-reset="${obj.id}">🔄 ${t("reset")}</button>
+                        </div>`;
+                    }
+                    
+                    html += `</div></div>`;
                 }
-                e.stopPropagation();
+                
+                html += `<button class="btn-primary" id="addObjectFromListBtn" style="margin-top:20px;">➕ ${t("addObject")}</button>`;
+                html += `</div>`;
+            }
+            
+            html += `<footer>✅ Проверьте всё перед выходом. Будьте спокойны!</footer>`;
+            appDiv.innerHTML = html;
+            
+            // Привязка событий
+            document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
+            document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
+            
+            document.getElementById("addFirstObjectBtn")?.addEventListener("click", () => {
+                showAddForm = true;
+                renderApp();
             });
-        });
-
-        document.querySelectorAll("[data-deleteitem]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const val = btn.getAttribute("data-deleteitem");
-                if(val) {
-                    const [objId, roomId, itemId] = val.split("|");
-                    deleteItem(objId, roomId, itemId);
+            
+            document.getElementById("addObjectFromListBtn")?.addEventListener("click", () => {
+                if(objects.length >= 3) {
+                    alert(t("limitWarning"));
+                } else {
+                    showAddForm = true;
+                    renderApp();
                 }
-                e.stopPropagation();
             });
-        });
-
-        document.querySelectorAll("[data-toggle]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const val = btn.getAttribute("data-toggle");
-                if(val) {
-                    const [objId, roomId, itemId] = val.split("|");
-                    toggleCheck(objId, roomId, itemId);
-                }
-                e.stopPropagation();
+            
+            document.getElementById("addRoomTempBtn")?.addEventListener("click", () => addRoomToTemp());
+            document.getElementById("saveObjectBtn")?.addEventListener("click", () => saveObject());
+            document.getElementById("cancelAddBtn")?.addEventListener("click", () => cancelAdd());
+            
+            document.querySelectorAll(".room-name-input").forEach(inp => {
+                inp.addEventListener("change", (e) => {
+                    const idx = parseInt(inp.getAttribute("data-room-index"));
+                    if(!isNaN(idx)) tempObject.rooms[idx].name = inp.value;
+                });
             });
-        });
-
-        document.querySelectorAll("[data-field='objname']").forEach(inp => {
-            inp.addEventListener("change", (e) => {
-                const objId = inp.getAttribute("data-objid");
-                if(objId) renameObject(objId, inp.value);
+            
+            document.querySelectorAll("[data-add-item-temp]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-add-item-temp");
+                    if(val) {
+                        const [idx, type] = val.split("|");
+                        addItemToTemp(parseInt(idx), type);
+                    }
+                });
             });
-        });
-
-        document.querySelectorAll("[data-field='roomname']").forEach(inp => {
-            inp.addEventListener("change", (e) => {
-                const objId = inp.getAttribute("data-objid");
-                const roomId = inp.getAttribute("data-roomid");
-                if(objId && roomId) renameRoom(objId, roomId, inp.value);
+            
+            document.querySelectorAll("[data-toggle-object]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-toggle-object");
+                    if(objId) toggleObject(objId);
+                    e.stopPropagation();
+                });
             });
-        });
-
-        document.querySelectorAll("[data-field='itemname']").forEach(inp => {
-            inp.addEventListener("change", (e) => {
-                const objId = inp.getAttribute("data-objid");
-                const roomId = inp.getAttribute("data-roomid");
-                const itemId = inp.getAttribute("data-itemid");
-                if(objId && roomId && itemId) renameItem(objId, roomId, itemId, inp.value);
+            
+            document.querySelectorAll("[data-edit-object]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-edit-object");
+                    const obj = objects.find(o => o.id === objId);
+                    if(obj) editObject(obj);
+                    e.stopPropagation();
+                });
             });
-        });
-    }
-
-    loadData();
-    applyTheme();
-    renderApp();
-</script>
+            
+            document.querySelectorAll("[data-delete-object]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-delete-object");
+                    if(objId) deleteObjectFromList(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-toggle]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-toggle");
+                    if(val) {
+                        const [objId, roomId, itemId] = val.split("|");
+                        toggleItemCheck(objId, roomId, itemId);
+                    }
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-add-item]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-add-item");
+                    if(val) {
+                        const [objId, roomId, type] = val.split("|");
+                        addItemToExisting(objId, roomId, type);
+                    }
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-delete-item]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-delete-item");
+                    if(val) {
+                        const [objId, roomId, itemId] = val.split("|");
+                        deleteItem(objId, roomId, itemId);
+                    }
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-done]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-done");
+                    if(objId) checkAllAndDone(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-reset]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const objId = btn.getAttribute("data-reset");
+                    if(objId) resetCheck(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.getElementById("objNameInput")?.addEventListener("change", (e) => {
+                tempObject.name = e.target.value;
+            });
+        }
+        
+        function escapeHtml(str) {
+            if(!str) return "";
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        loadData();
+        applyTheme();
+        renderApp();
+    </script>
 </body>
 </html>
