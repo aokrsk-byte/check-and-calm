@@ -8,6 +8,7 @@
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         body {
@@ -271,6 +272,21 @@
             background: #f8fafc;
             border-radius: 20px;
             overflow: hidden;
+            transition: all 0.2s;
+            cursor: grab;
+        }
+
+        .object-item:active {
+            cursor: grabbing;
+        }
+
+        .object-item.dragging {
+            opacity: 0.3;
+        }
+
+        .object-item.drag-over {
+            border: 2px solid #22c55e;
+            transform: scale(1.01);
         }
 
         body.dark-theme .object-item {
@@ -282,19 +298,28 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            cursor: pointer;
             transition: background 0.2s;
             font-weight: 700;
             font-size: 1.1rem;
+            background: inherit;
         }
 
-        .object-header:hover {
-            background: rgba(0,0,0,0.05);
+        .drag-handle {
+            cursor: grab;
+            padding: 8px;
+            margin: -8px;
+            font-size: 1.2rem;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
         }
 
         .object-name {
             font-size: 1.2rem;
             font-weight: 700;
+            flex: 1;
+            margin-left: 8px;
         }
 
         .room-content {
@@ -312,6 +337,25 @@
             padding: 12px;
             background: #f1f5f9;
             border-radius: 16px;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+
+        .room-block:active {
+            cursor: grabbing;
+        }
+
+        .room-block.dragging {
+            opacity: 0.3;
+        }
+
+        .room-block.drag-over {
+            border: 2px solid #22c55e;
+            transform: scale(1.01);
+        }
+
+        body.dark-theme .room-block {
+            background: #1e293b;
         }
 
         .room-title {
@@ -343,6 +387,21 @@
             margin: 8px 0;
             background: white;
             border-radius: 12px;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+
+        .check-item:active {
+            cursor: grabbing;
+        }
+
+        .check-item.dragging {
+            opacity: 0.3;
+        }
+
+        .check-item.drag-over {
+            border: 2px solid #22c55e;
+            transform: scale(1.01);
         }
 
         body.dark-theme .check-item {
@@ -414,6 +473,21 @@
             font-size: 0.85rem;
             margin-top: 8px;
             width: 100%;
+        }
+
+        .delete-room-btn {
+            background: #fee2e2;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #b91c1c;
+        }
+
+        body.dark-theme .delete-room-btn {
+            background: #7f1a1a;
+            color: #fecaca;
         }
 
         .done-section {
@@ -492,50 +566,6 @@
             font-size: 4rem;
             margin-bottom: 20px;
         }
-
-        .global-actions {
-            margin-top: 20px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 28px;
-            padding: 24px;
-            max-width: 300px;
-            width: 90%;
-            text-align: center;
-        }
-
-        body.dark-theme .modal {
-            background: #1e293b;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .modal-buttons button {
-            flex: 1;
-            padding: 10px;
-            border-radius: 40px;
-            border: none;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -564,6 +594,7 @@
                 themeLight: "☀️ Светлая",
                 themeDark: "🌙 Тёмная",
                 confirmDelete: "Удалить этот объект?",
+                confirmDeleteRoom: "Удалить это помещение?",
                 confirmReset: "Сбросить все проверки? Все отметки будут удалены.",
                 yes: "Да",
                 no: "Нет"
@@ -589,6 +620,7 @@
                 themeLight: "☀️ Light",
                 themeDark: "🌙 Dark",
                 confirmDelete: "Delete this place?",
+                confirmDeleteRoom: "Delete this room?",
                 confirmReset: "Reset all checks? All marks will be removed.",
                 yes: "Yes",
                 no: "No"
@@ -603,12 +635,17 @@
         let showCompleteScreen = false;
         let lastCompleteTime = null;
 
+        // Drag and drop variables
+        let dragType = null;
+        let dragData = null;
+        let dragSourceId = null;
+
         function t(key) { return translations[lang][key] || translations.ru[key]; }
 
         function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 8); }
 
         function loadData() {
-            const saved = localStorage.getItem("check_calm_app_v4");
+            const saved = localStorage.getItem("check_calm_app_v5");
             if(saved) {
                 const data = JSON.parse(saved);
                 objects = data.objects || [];
@@ -618,7 +655,7 @@
         }
 
         function saveData() {
-            localStorage.setItem("check_calm_app_v4", JSON.stringify({
+            localStorage.setItem("check_calm_app_v5", JSON.stringify({
                 objects: objects,
                 showCompleteScreen: showCompleteScreen,
                 lastCompleteTime: lastCompleteTime
@@ -801,6 +838,21 @@
             }
         }
 
+        function deleteRoom(objId, roomId) {
+            if(confirm(t("confirmDeleteRoom"))) {
+                const obj = objects.find(o => o.id === objId);
+                if(obj) {
+                    obj.rooms = obj.rooms.filter(r => r.id !== roomId);
+                    obj.allCheckedTime = null;
+                    showCompleteScreen = false;
+                    lastCompleteTime = null;
+                    playSound('click');
+                    saveData();
+                    renderApp();
+                }
+            }
+        }
+
         function editObject(obj) {
             editingObjectId = obj.id;
             tempObject = {
@@ -956,6 +1008,92 @@
             renderApp();
         }
 
+        // Drag and drop functions
+        function startDragObject(e, index) {
+            dragType = 'object';
+            dragData = index;
+            dragSourceId = index;
+            e.target.closest('.object-item')?.classList.add('dragging');
+        }
+
+        function startDragRoom(e, objIndex, roomIndex) {
+            dragType = 'room';
+            dragData = { objIndex, roomIndex };
+            dragSourceId = `${objIndex}-${roomIndex}`;
+            e.target.closest('.room-block')?.classList.add('dragging');
+        }
+
+        function startDragItem(e, objIndex, roomIndex, itemIndex) {
+            dragType = 'item';
+            dragData = { objIndex, roomIndex, itemIndex };
+            dragSourceId = `${objIndex}-${roomIndex}-${itemIndex}`;
+            e.target.closest('.check-item')?.classList.add('dragging');
+        }
+
+        function dropObject(e, targetIndex) {
+            e.preventDefault();
+            if (dragType === 'object' && dragData !== targetIndex) {
+                const [item] = objects.splice(dragData, 1);
+                objects.splice(targetIndex, 0, item);
+                playSound('click');
+                saveData();
+                renderApp();
+            }
+            clearDragHighlight();
+        }
+
+        function dropRoom(e, targetObjIndex, targetRoomIndex) {
+            e.preventDefault();
+            if (dragType === 'room' && dragData) {
+                const { objIndex: sourceObjIndex, roomIndex: sourceRoomIndex } = dragData;
+                if (sourceObjIndex === targetObjIndex && sourceRoomIndex !== targetRoomIndex) {
+                    const [room] = objects[sourceObjIndex].rooms.splice(sourceRoomIndex, 1);
+                    objects[targetObjIndex].rooms.splice(targetRoomIndex, 0, room);
+                    playSound('click');
+                    saveData();
+                    renderApp();
+                }
+            }
+            clearDragHighlight();
+        }
+
+        function dropItem(e, targetObjIndex, targetRoomIndex, targetItemIndex) {
+            e.preventDefault();
+            if (dragType === 'item' && dragData) {
+                const { objIndex: sourceObjIndex, roomIndex: sourceRoomIndex, itemIndex: sourceItemIndex } = dragData;
+                if (sourceObjIndex === targetObjIndex && sourceRoomIndex === targetRoomIndex && sourceItemIndex !== targetItemIndex) {
+                    const [item] = objects[sourceObjIndex].rooms[sourceRoomIndex].items.splice(sourceItemIndex, 1);
+                    objects[targetObjIndex].rooms[targetRoomIndex].items.splice(targetItemIndex, 0, item);
+                    playSound('click');
+                    saveData();
+                    renderApp();
+                }
+            }
+            clearDragHighlight();
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+        }
+
+        function dragEnter(e, element) {
+            e.preventDefault();
+            element?.classList.add('drag-over');
+        }
+
+        function dragLeave(e, element) {
+            element?.classList.remove('drag-over');
+        }
+
+        function clearDragHighlight() {
+            document.querySelectorAll('.dragging, .drag-over').forEach(el => {
+                el.classList.remove('dragging', 'drag-over');
+            });
+            dragType = null;
+            dragData = null;
+            dragSourceId = null;
+        }
+
         function renderApp() {
             const appDiv = document.getElementById("app");
             if(!appDiv) return;
@@ -1026,38 +1164,61 @@
             } 
             else {
                 html += `<div class="limit-info" style="margin-bottom: 16px;">${t("limitInfo")} (${objects.length}/3)</div>`;
-                html += `<div class="object-list">`;
+                html += `<div class="object-list" id="objectList">`;
                 
-                for(let obj of objects) {
-                    html += `<div class="object-item">
-                        <div class="object-header" data-toggle-object="${obj.id}">
+                for(let objIdx = 0; objIdx < objects.length; objIdx++) {
+                    const obj = objects[objIdx];
+                    
+                    html += `<div class="object-item" draggable="true" data-object-index="${objIdx}"
+                        ondragstart="startDragObject(event, ${objIdx})"
+                        ondragover="dragOver(event)"
+                        ondrop="dropObject(event, ${objIdx})"
+                        ondragenter="dragEnter(event, this)"
+                        ondragleave="dragLeave(event, this)">
+                        <div class="object-header">
+                            <span class="drag-handle" draggable="true">⋮⋮</span>
                             <span class="object-name">🏠 ${escapeHtml(obj.name)}</span>
                             <div>
                                 <button class="btn-secondary" data-edit-object="${obj.id}" style="margin-right:8px;">✏️</button>
                                 <button class="btn-secondary" data-delete-object="${obj.id}">🗑</button>
                             </div>
                         </div>
-                        <div class="room-content" id="rooms-${obj.id}">`;
+                        <div class="room-content">`;
                     
                     if(obj.rooms.length === 0) {
                         html += `<div style="text-align:center; padding:20px; color:#94a3b8;">Нет добавленных помещений</div>`;
                     }
                     
-                    for(let room of obj.rooms) {
-                        html += `<div class="room-block">
+                    for(let roomIdx = 0; roomIdx < obj.rooms.length; roomIdx++) {
+                        const room = obj.rooms[roomIdx];
+                        
+                        html += `<div class="room-block" draggable="true" data-object-index="${objIdx}" data-room-index="${roomIdx}"
+                            ondragstart="startDragRoom(event, ${objIdx}, ${roomIdx})"
+                            ondragover="dragOver(event)"
+                            ondrop="dropRoom(event, ${objIdx}, ${roomIdx})"
+                            ondragenter="dragEnter(event, this)"
+                            ondragleave="dragLeave(event, this)">
                             <div class="room-title">
-                                <span>📍 ${escapeHtml(room.name)}</span>
+                                <span class="drag-handle" draggable="true">⋮⋮</span>
+                                <span style="flex:1;">📍 ${escapeHtml(room.name)}</span>
+                                <button class="delete-room-btn" data-delete-room="${obj.id}|${room.id}">🗑 Удалить</button>
                             </div>`;
                         
                         if(room.items.length === 0) {
                             html += `<div style="text-align:center; padding:10px; color:#94a3b8;">Нет добавленных элементов</div>`;
                         }
                         
-                        for(let item of room.items) {
+                        for(let itemIdx = 0; itemIdx < room.items.length; itemIdx++) {
+                            const item = room.items[itemIdx];
                             const isChecked = item.checked;
                             const timeStr = item.lastCheck ? `✅ ${item.lastCheck}` : "—";
                             
-                            html += `<div class="check-item" data-item-id="${item.id}">
+                            html += `<div class="check-item" draggable="true" data-object-index="${objIdx}" data-room-index="${roomIdx}" data-item-index="${itemIdx}" data-item-id="${item.id}"
+                                ondragstart="startDragItem(event, ${objIdx}, ${roomIdx}, ${itemIdx})"
+                                ondragover="dragOver(event)"
+                                ondrop="dropItem(event, ${objIdx}, ${roomIdx}, ${itemIdx})"
+                                ondragenter="dragEnter(event, this)"
+                                ondragleave="dragLeave(event, this)">
                                 <div class="item-info">
                                     <div class="item-name-display">${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '🔥'} ${escapeHtml(item.name)}</div>
                                     <div class="item-time">${timeStr}</div>
@@ -1099,7 +1260,7 @@
                 html += `</div>`;
             }
             
-            html += `<footer>✅ Проверьте всё перед выходом. Будьте спокойны!</footer>`;
+            html += `<footer>✅ Перемещайте объекты, помещения и элементы за ⋮⋮. Нажмите и удерживайте для перетаскивания.</footer>`;
             appDiv.innerHTML = html;
             
             // Привязка событий
@@ -1140,17 +1301,6 @@
                 });
             });
             
-            document.querySelectorAll("[data-toggle-object]").forEach(btn => {
-                btn.addEventListener("click", (e) => {
-                    const objId = btn.getAttribute("data-toggle-object");
-                    if(objId) {
-                        const content = document.getElementById(`rooms-${objId}`);
-                        if(content) content.classList.toggle('open');
-                    }
-                    e.stopPropagation();
-                });
-            });
-            
             document.querySelectorAll("[data-edit-object]").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     const objId = btn.getAttribute("data-edit-object");
@@ -1164,6 +1314,17 @@
                 btn.addEventListener("click", (e) => {
                     const objId = btn.getAttribute("data-delete-object");
                     if(objId) deleteObjectFromList(objId);
+                    e.stopPropagation();
+                });
+            });
+            
+            document.querySelectorAll("[data-delete-room]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const val = btn.getAttribute("data-delete-room");
+                    if(val) {
+                        const [objId, roomId] = val.split("|");
+                        deleteRoom(objId, roomId);
+                    }
                     e.stopPropagation();
                 });
             });
@@ -1204,6 +1365,14 @@
             document.getElementById("objNameInput")?.addEventListener("change", (e) => {
                 tempObject.name = e.target.value;
             });
+            
+            // Предотвращаем стандартное поведение drag для всех draggable элементов
+            document.querySelectorAll('[draggable="true"]').forEach(el => {
+                el.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', 'drag');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+            });
         }
         
         function escapeHtml(str) {
@@ -1215,6 +1384,17 @@
                 return m;
             });
         }
+        
+        // Глобальные функции для drag and drop
+        window.startDragObject = startDragObject;
+        window.startDragRoom = startDragRoom;
+        window.startDragItem = startDragItem;
+        window.dropObject = dropObject;
+        window.dropRoom = dropRoom;
+        window.dropItem = dropItem;
+        window.dragOver = dragOver;
+        window.dragEnter = dragEnter;
+        window.dragLeave = dragLeave;
         
         loadData();
         applyTheme();
