@@ -71,6 +71,15 @@
             background: #1e293b;
         }
 
+        body.dark-theme .premium-badge {
+            background: #854d0e;
+            color: #fef08a;
+        }
+
+        body.dark-theme .premium-modal {
+            background: #1e293b;
+        }
+
         .app-container {
             max-width: 600px;
             margin: 0 auto;
@@ -99,12 +108,24 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         body.dark-theme h1 {
             background: linear-gradient(135deg, #818cf8, #a5b4fc);
             -webkit-background-clip: text;
             background-clip: text;
+        }
+
+        .premium-badge {
+            background: #fef3c7;
+            color: #b45309;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 40px;
+            font-weight: 600;
         }
 
         .header-buttons {
@@ -260,6 +281,21 @@
             transition: all 0.2s;
             width: 100%;
             margin-top: 20px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #22c55e;
+            color: #22c55e;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:active {
+            transform: scale(0.98);
         }
 
         .object-list {
@@ -553,6 +589,71 @@
             margin-right: 8px;
             color: #64748b;
         }
+
+        /* Premium Modal */
+        .premium-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .premium-modal {
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .premium-modal h3 {
+            font-size: 1.5rem;
+            margin: 0 0 12px 0;
+        }
+
+        .premium-modal .price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #22c55e;
+            margin: 16px 0;
+        }
+
+        .premium-features {
+            text-align: left;
+            margin: 16px 0;
+            padding-left: 20px;
+        }
+
+        .premium-features li {
+            margin: 8px 0;
+        }
+
+        .premium-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .support-btn {
+            background: #fef3c7;
+            color: #b45309;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -582,7 +683,18 @@
                 themeDark: "🌙 Тёмная",
                 confirmDelete: "Удалить этот объект?",
                 confirmDeleteRoom: "Удалить это помещение?",
-                confirmReset: "Сбросить все проверки? Все отметки будут удалены."
+                confirmReset: "Сбросить все проверки? Все отметки будут удалены.",
+                premium: "Premium",
+                support: "☕ Поддержать проект",
+                activatePremium: "Активировать Premium",
+                enterKey: "Введите ключ активации",
+                unlock: "Разблокировать",
+                premiumUnlocked: "Premium активирован! Теперь безлимит объектов.",
+                settings: "⚙️ Настройки",
+                close: "Закрыть",
+                keyAlreadyUsed: "❌ Этот ключ уже использован на другом устройстве",
+                keyInvalid: "❌ Неверный ключ активации",
+                keyBlocked: "❌ Этот ключ заблокирован"
             },
             en: {
                 appTitle: "Check&Calm",
@@ -599,14 +711,25 @@
                 done: "Done",
                 reset: "Reset Check",
                 allOff: "✅ EVERYTHING IS OFF",
-                limitWarning: "⚠️ Free version allows max 3 objects. Upgrade to Premium for more.",
+                limitWarning: "⚠️ Free version allows max 3 objects. Get Premium for unlimited.",
                 limitInfo: "📱 Free version: max 3 objects",
                 checkAll: "⚠️ Not all items checked! Please check everything.",
                 themeLight: "☀️ Light",
                 themeDark: "🌙 Dark",
                 confirmDelete: "Delete this place?",
                 confirmDeleteRoom: "Delete this room?",
-                confirmReset: "Reset all checks? All marks will be removed."
+                confirmReset: "Reset all checks? All marks will be removed.",
+                premium: "Premium",
+                support: "☕ Support the project",
+                activatePremium: "Activate Premium",
+                enterKey: "Enter activation key",
+                unlock: "Unlock",
+                premiumUnlocked: "Premium activated! Unlimited objects now.",
+                settings: "⚙️ Settings",
+                close: "Close",
+                keyAlreadyUsed: "❌ This key has already been used on another device",
+                keyInvalid: "❌ Invalid activation key",
+                keyBlocked: "❌ This key has been blocked"
             }
         };
 
@@ -618,22 +741,89 @@
         let showCompleteScreen = false;
         let lastCompleteTime = null;
         let expandedObjects = JSON.parse(localStorage.getItem("expanded_objects") || "{}");
+        let showPremiumModal = false;
+        let showSettingsModal = false;
 
-        // Drag and drop state
-        let dragState = {
-            active: false,
-            sourceIndex: null,
-            startY: 0,
-            currentTargetIndex: null,
-            insertPosition: null
+        // ========== ПРЕМИУМ С ЗАЩИТОЙ ==========
+        const PREMIUM = {
+            // Демо-ключи (удалите или замените перед реальным запуском!)
+            demoKeys: ["DEMO2024", "PREMIUM2024", "CHECKCALM"],
+            
+            // Реальные ключи (будете добавлять сюда после продажи)
+            validKeys: [],
+            
+            // Чёрный список скомпрометированных ключей
+            blacklistedKeys: [],
+            
+            getDeviceId() {
+                let deviceId = localStorage.getItem("device_id");
+                if (!deviceId) {
+                    deviceId = "dev_" + Date.now() + "_" + Math.random().toString(36).substr(2, 16);
+                    localStorage.setItem("device_id", deviceId);
+                }
+                return deviceId;
+            },
+            
+            isPremium() {
+                return localStorage.getItem("checkcalm_premium") === "true";
+            },
+            
+            activatePremium(key) {
+                const normalizedKey = key.toUpperCase().trim();
+                const deviceId = this.getDeviceId();
+                
+                // Загружаем историю активаций
+                const activations = JSON.parse(localStorage.getItem("premium_activations") || "{}");
+                
+                // Проверка чёрного списка
+                if (this.blacklistedKeys.includes(normalizedKey)) {
+                    alert(t("keyBlocked"));
+                    playSound('error');
+                    return false;
+                }
+                
+                // Проверка: не активирован ли ключ на другом устройстве
+                if (activations[normalizedKey] && activations[normalizedKey] !== deviceId) {
+                    alert(t("keyAlreadyUsed"));
+                    playSound('error');
+                    return false;
+                }
+                
+                // Проверка валидности ключа
+                const isValid = this.demoKeys.includes(normalizedKey) || 
+                                this.validKeys.includes(normalizedKey);
+                
+                if (isValid) {
+                    // Сохраняем активацию
+                    activations[normalizedKey] = deviceId;
+                    localStorage.setItem("premium_activations", JSON.stringify(activations));
+                    localStorage.setItem("checkcalm_premium", "true");
+                    playSound('success');
+                    alert(t("premiumUnlocked"));
+                    return true;
+                }
+                
+                alert(t("keyInvalid"));
+                playSound('error');
+                return false;
+            },
+            
+            // Добавить новый ключ после продажи
+            addKey(key) {
+                this.validKeys.push(key.toUpperCase());
+            },
+            
+            // Заблокировать скомпрометированный ключ
+            blockKey(key) {
+                this.blacklistedKeys.push(key.toUpperCase());
+            }
         };
 
         function t(key) { return translations[lang][key] || translations.ru[key]; }
-
         function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 8); }
 
         function loadData() {
-            const saved = localStorage.getItem("check_calm_app_v7");
+            const saved = localStorage.getItem("check_calm_app_v9");
             if(saved) {
                 const data = JSON.parse(saved);
                 objects = data.objects || [];
@@ -643,7 +833,7 @@
         }
 
         function saveData() {
-            localStorage.setItem("check_calm_app_v7", JSON.stringify({
+            localStorage.setItem("check_calm_app_v9", JSON.stringify({
                 objects: objects,
                 showCompleteScreen: showCompleteScreen,
                 lastCompleteTime: lastCompleteTime
@@ -715,6 +905,25 @@
             renderApp();
         }
 
+        function getPremiumKeyLink() {
+            // ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ BOOSTY
+            return "https://boosty.to/ваш_аккаунт";
+        }
+
+        function getSupportLink() {
+            // ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ ДЛЯ ДОНАТОВ
+            return "https://boosty.to/ваш_аккаунт";
+        }
+
+        function checkObjectLimit() {
+            if (!PREMIUM.isPremium() && objects.length >= 3) {
+                showPremiumModal = true;
+                renderApp();
+                return false;
+            }
+            return true;
+        }
+
         function toggleObject(objId) {
             expandedObjects[objId] = !expandedObjects[objId];
             saveData();
@@ -779,8 +988,9 @@
                 }
                 editingObjectId = null;
             } else {
-                if(objects.length >= 3) {
-                    alert(t("limitWarning"));
+                if (!PREMIUM.isPremium() && objects.length >= 3) {
+                    showPremiumModal = true;
+                    renderApp();
                     return;
                 }
                 objects.push({
@@ -1001,12 +1211,25 @@
         }
 
         function startAddObject() {
+            if (!PREMIUM.isPremium() && objects.length >= 3) {
+                showPremiumModal = true;
+                renderApp();
+                return;
+            }
             playSound('click');
             showAddForm = true;
             renderApp();
         }
 
-        // ========== DRAG AND DROP IMPLEMENTATION ==========
+        // ========== DRAG AND DROP ==========
+        let dragState = {
+            active: false,
+            sourceIndex: null,
+            startY: 0,
+            currentTargetIndex: null,
+            insertPosition: null
+        };
+
         function handleDragStart(e, index) {
             e.preventDefault();
             e.stopPropagation();
@@ -1105,6 +1328,7 @@
                     objects.splice(toIndex, 0, item);
                     playSound('click');
                     saveData();
+                    renderApp();
                 }
             }
             
@@ -1132,8 +1356,9 @@
 
             let html = `
                 <div class="header">
-                    <h1>${t("appTitle")}</h1>
+                    <h1>${t("appTitle")} ${PREMIUM.isPremium() ? '<span class="premium-badge">👑 Premium</span>' : ''}</h1>
                     <div class="header-buttons">
+                        <button class="theme-toggle" id="settingsBtn">⚙️</button>
                         <button class="theme-toggle" id="themeToggleBtn">${isDarkTheme ? t("themeLight") : t("themeDark")}</button>
                         <select class="lang-select" id="langSelect">
                             <option value="ru" ${lang === "ru" ? "selected" : ""}>🇷🇺 Рус</option>
@@ -1193,9 +1418,12 @@
                     <button class="pulse-btn" id="addFirstObjectBtn">${t("addObject")}</button>
                 </div>`;
                 html += `<div class="limit-info">${t("limitInfo")}</div>`;
+                html += `<div style="text-align:center; margin-top:16px;">
+                    <a href="${getSupportLink()}" target="_blank" class="support-btn" style="text-decoration:none;">${t("support")}</a>
+                </div>`;
             } 
             else {
-                html += `<div class="limit-info" style="margin-bottom: 16px;">${t("limitInfo")} (${objects.length}/3)</div>`;
+                html += `<div class="limit-info" style="margin-bottom: 16px;">${PREMIUM.isPremium() ? '🌟 Premium активирован — безлимит объектов' : t("limitInfo") + ` (${objects.length}/3)`}</div>`;
                 html += `<div class="object-list" id="objectList">`;
                 
                 for(let objIdx = 0; objIdx < objects.length; objIdx++) {
@@ -1272,11 +1500,97 @@
                 }
                 
                 html += `<button class="btn-primary" id="addObjectFromListBtn" style="margin-top:20px;">➕ ${t("addObject")}</button>`;
+                html += `<div style="text-align:center; margin-top:20px;">
+                    <a href="${getSupportLink()}" target="_blank" class="support-btn" style="text-decoration:none;">${t("support")}</a>
+                </div>`;
                 html += `</div>`;
             }
             
             html += `<footer>✅ Нажмите на объект для разворачивания. Перемещайте объекты за ⋮⋮.</footer>`;
             appDiv.innerHTML = html;
+            
+            // Premium Modal
+            if (showPremiumModal) {
+                const modalHtml = `
+                    <div class="premium-modal-overlay" id="premiumModalOverlay">
+                        <div class="premium-modal">
+                            <h3>👑 Premium</h3>
+                            <p>Добавьте больше объектов и получите все возможности</p>
+                            <div class="price">199 ₽</div>
+                            <ul class="premium-features">
+                                <li>✅ Безлимит объектов</li>
+                                <li>✅ Безлимит комнат и розеток</li>
+                                <li>✅ Экспорт данных</li>
+                                <li>✅ Приоритетная поддержка</li>
+                            </ul>
+                            <div class="premium-buttons">
+                                <button class="btn-primary" id="buyPremiumBtn">💎 Купить Premium</button>
+                                <button class="btn-secondary" id="enterKeyBtn">🔑 У меня есть ключ</button>
+                                <button class="btn-secondary" id="closePremiumModal">${t("close")}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                document.getElementById("buyPremiumBtn")?.addEventListener("click", () => {
+                    window.open(getPremiumKeyLink(), '_blank');
+                    showPremiumModal = false;
+                    renderApp();
+                });
+                document.getElementById("enterKeyBtn")?.addEventListener("click", () => {
+                    const key = prompt("Введите ключ активации Premium:");
+                    if (key) {
+                        if (PREMIUM.activatePremium(key)) {
+                            showPremiumModal = false;
+                            renderApp();
+                        }
+                    }
+                });
+                document.getElementById("closePremiumModal")?.addEventListener("click", () => {
+                    showPremiumModal = false;
+                    renderApp();
+                });
+                document.getElementById("premiumModalOverlay")?.addEventListener("click", (e) => {
+                    if (e.target.id === "premiumModalOverlay") {
+                        showPremiumModal = false;
+                        renderApp();
+                    }
+                });
+            }
+            
+            // Settings Modal
+            if (showSettingsModal) {
+                const settingsHtml = `
+                    <div class="premium-modal-overlay" id="settingsModalOverlay">
+                        <div class="premium-modal">
+                            <h3>⚙️ ${t("settings")}</h3>
+                            <div style="font-size:0.8rem; color:#64748b; margin-bottom:16px;">
+                                Device ID: ${PREMIUM.getDeviceId().substr(0, 12)}...
+                            </div>
+                            ${!PREMIUM.isPremium() ? `<button class="btn-outline" id="activatePremiumSettingsBtn" style="width:100%; margin-bottom:12px;">💎 ${t("activatePremium")}</button>` : ''}
+                            <button class="btn-secondary" id="closeSettingsModal" style="width:100%;">${t("close")}</button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', settingsHtml);
+                
+                document.getElementById("activatePremiumSettingsBtn")?.addEventListener("click", () => {
+                    showSettingsModal = false;
+                    showPremiumModal = true;
+                    renderApp();
+                });
+                document.getElementById("closeSettingsModal")?.addEventListener("click", () => {
+                    showSettingsModal = false;
+                    renderApp();
+                });
+                document.getElementById("settingsModalOverlay")?.addEventListener("click", (e) => {
+                    if (e.target.id === "settingsModalOverlay") {
+                        showSettingsModal = false;
+                        renderApp();
+                    }
+                });
+            }
             
             // Привязка drag handlers
             document.querySelectorAll('.drag-handle').forEach(handle => {
@@ -1296,17 +1610,15 @@
             // Привязка остальных событий
             document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
             document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
+            document.getElementById("settingsBtn")?.addEventListener("click", () => {
+                showSettingsModal = true;
+                renderApp();
+            });
             document.getElementById("resetAllBtn")?.addEventListener("click", () => resetAllChecks());
             document.getElementById("completeCheckBtn")?.addEventListener("click", () => checkAllItems());
             
             document.getElementById("addFirstObjectBtn")?.addEventListener("click", () => startAddObject());
-            document.getElementById("addObjectFromListBtn")?.addEventListener("click", () => {
-                if(objects.length >= 3) {
-                    alert(t("limitWarning"));
-                } else {
-                    startAddObject();
-                }
-            });
+            document.getElementById("addObjectFromListBtn")?.addEventListener("click", () => startAddObject());
             
             document.getElementById("addRoomTempBtn")?.addEventListener("click", () => addRoomToTemp());
             document.getElementById("saveObjectBtn")?.addEventListener("click", () => saveObject());
