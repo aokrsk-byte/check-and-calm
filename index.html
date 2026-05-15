@@ -273,14 +273,9 @@
             border-radius: 20px;
             overflow: hidden;
             transition: all 0.2s;
-            cursor: grab;
         }
 
-        .object-item:active {
-            cursor: grabbing;
-        }
-
-        .object-item.dragging {
+        .object-item.dragging-source {
             opacity: 0.3;
         }
 
@@ -306,9 +301,11 @@
 
         .drag-handle {
             cursor: grab;
-            padding: 8px;
-            margin: -8px;
+            padding: 12px;
+            margin: -12px;
             font-size: 1.2rem;
+            touch-action: none;
+            display: inline-block;
         }
 
         .drag-handle:active {
@@ -337,15 +334,10 @@
             padding: 12px;
             background: #f1f5f9;
             border-radius: 16px;
-            cursor: grab;
             transition: all 0.2s;
         }
 
-        .room-block:active {
-            cursor: grabbing;
-        }
-
-        .room-block.dragging {
+        .room-block.dragging-source {
             opacity: 0.3;
         }
 
@@ -387,15 +379,10 @@
             margin: 8px 0;
             background: white;
             border-radius: 12px;
-            cursor: grab;
             transition: all 0.2s;
         }
 
-        .check-item:active {
-            cursor: grabbing;
-        }
-
-        .check-item.dragging {
+        .check-item.dragging-source {
             opacity: 0.3;
         }
 
@@ -595,9 +582,7 @@
                 themeDark: "🌙 Тёмная",
                 confirmDelete: "Удалить этот объект?",
                 confirmDeleteRoom: "Удалить это помещение?",
-                confirmReset: "Сбросить все проверки? Все отметки будут удалены.",
-                yes: "Да",
-                no: "Нет"
+                confirmReset: "Сбросить все проверки? Все отметки будут удалены."
             },
             en: {
                 appTitle: "Check&Calm",
@@ -621,9 +606,7 @@
                 themeDark: "🌙 Dark",
                 confirmDelete: "Delete this place?",
                 confirmDeleteRoom: "Delete this room?",
-                confirmReset: "Reset all checks? All marks will be removed.",
-                yes: "Yes",
-                no: "No"
+                confirmReset: "Reset all checks? All marks will be removed."
             }
         };
 
@@ -635,17 +618,22 @@
         let showCompleteScreen = false;
         let lastCompleteTime = null;
 
-        // Drag and drop variables
-        let dragType = null;
-        let dragData = null;
-        let dragSourceId = null;
+        // Drag and drop state
+        let dragState = {
+            active: false,
+            type: null,
+            sourceData: null,
+            startX: 0,
+            startY: 0,
+            currentTarget: null
+        };
 
         function t(key) { return translations[lang][key] || translations.ru[key]; }
 
         function genId() { return Date.now() + "-" + Math.random().toString(36).substr(2, 8); }
 
         function loadData() {
-            const saved = localStorage.getItem("check_calm_app_v5");
+            const saved = localStorage.getItem("check_calm_app_v6");
             if(saved) {
                 const data = JSON.parse(saved);
                 objects = data.objects || [];
@@ -655,7 +643,7 @@
         }
 
         function saveData() {
-            localStorage.setItem("check_calm_app_v5", JSON.stringify({
+            localStorage.setItem("check_calm_app_v6", JSON.stringify({
                 objects: objects,
                 showCompleteScreen: showCompleteScreen,
                 lastCompleteTime: lastCompleteTime
@@ -1008,90 +996,119 @@
             renderApp();
         }
 
-        // Drag and drop functions
-        function startDragObject(e, index) {
-            dragType = 'object';
-            dragData = index;
-            dragSourceId = index;
-            e.target.closest('.object-item')?.classList.add('dragging');
-        }
-
-        function startDragRoom(e, objIndex, roomIndex) {
-            dragType = 'room';
-            dragData = { objIndex, roomIndex };
-            dragSourceId = `${objIndex}-${roomIndex}`;
-            e.target.closest('.room-block')?.classList.add('dragging');
-        }
-
-        function startDragItem(e, objIndex, roomIndex, itemIndex) {
-            dragType = 'item';
-            dragData = { objIndex, roomIndex, itemIndex };
-            dragSourceId = `${objIndex}-${roomIndex}-${itemIndex}`;
-            e.target.closest('.check-item')?.classList.add('dragging');
-        }
-
-        function dropObject(e, targetIndex) {
+        // ========== DRAG AND DROP IMPLEMENTATION ==========
+        function handleDragStart(e, type, data, element) {
             e.preventDefault();
-            if (dragType === 'object' && dragData !== targetIndex) {
-                const [item] = objects.splice(dragData, 1);
-                objects.splice(targetIndex, 0, item);
-                playSound('click');
-                saveData();
-                renderApp();
+            e.stopPropagation();
+            
+            dragState.active = true;
+            dragState.type = type;
+            dragState.sourceData = data;
+            dragState.startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            dragState.startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            if (element) {
+                element.classList.add('dragging-source');
             }
-            clearDragHighlight();
+            
+            playSound('click');
+            vibrate();
         }
 
-        function dropRoom(e, targetObjIndex, targetRoomIndex) {
+        function handleDragMove(e) {
+            if (!dragState.active) return;
             e.preventDefault();
-            if (dragType === 'room' && dragData) {
-                const { objIndex: sourceObjIndex, roomIndex: sourceRoomIndex } = dragData;
-                if (sourceObjIndex === targetObjIndex && sourceRoomIndex !== targetRoomIndex) {
-                    const [room] = objects[sourceObjIndex].rooms.splice(sourceRoomIndex, 1);
-                    objects[targetObjIndex].rooms.splice(targetRoomIndex, 0, room);
-                    playSound('click');
-                    saveData();
-                    renderApp();
+            
+            const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            const moveDistance = Math.sqrt(
+                Math.pow(currentX - dragState.startX, 2) + 
+                Math.pow(currentY - dragState.startY, 2)
+            );
+            
+            if (moveDistance < 10) return;
+            
+            const targetElement = document.elementsFromPoint(currentX, currentY)[0];
+            const dropZone = targetElement?.closest('[data-drop-zone]');
+            
+            if (dropZone && dropZone !== dragState.currentTarget) {
+                if (dragState.currentTarget) {
+                    dragState.currentTarget.classList.remove('drag-over');
+                }
+                dragState.currentTarget = dropZone;
+                dragState.currentTarget.classList.add('drag-over');
+            } else if (!dropZone && dragState.currentTarget) {
+                dragState.currentTarget.classList.remove('drag-over');
+                dragState.currentTarget = null;
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (!dragState.active) return;
+            e.preventDefault();
+            
+            if (dragState.currentTarget) {
+                const targetData = dragState.currentTarget.dataset;
+                
+                if (dragState.type === 'object' && targetData.dropType === 'object') {
+                    const fromIndex = dragState.sourceData;
+                    const toIndex = parseInt(targetData.dropIndex);
+                    if (fromIndex !== toIndex && !isNaN(toIndex)) {
+                        const [item] = objects.splice(fromIndex, 1);
+                        objects.splice(toIndex, 0, item);
+                        playSound('click');
+                        saveData();
+                        renderApp();
+                    }
+                }
+                else if (dragState.type === 'room' && targetData.dropType === 'room') {
+                    const { objIndex: fromObjIndex, roomIndex: fromRoomIndex } = dragState.sourceData;
+                    const toObjIndex = parseInt(targetData.dropObjIndex);
+                    const toRoomIndex = parseInt(targetData.dropRoomIndex);
+                    if (fromObjIndex === toObjIndex && fromRoomIndex !== toRoomIndex && !isNaN(toRoomIndex)) {
+                        const [room] = objects[fromObjIndex].rooms.splice(fromRoomIndex, 1);
+                        objects[toObjIndex].rooms.splice(toRoomIndex, 0, room);
+                        playSound('click');
+                        saveData();
+                        renderApp();
+                    }
+                }
+                else if (dragState.type === 'item' && targetData.dropType === 'item') {
+                    const { objIndex: fromObjIndex, roomIndex: fromRoomIndex, itemIndex: fromItemIndex } = dragState.sourceData;
+                    const toObjIndex = parseInt(targetData.dropObjIndex);
+                    const toRoomIndex = parseInt(targetData.dropRoomIndex);
+                    const toItemIndex = parseInt(targetData.dropItemIndex);
+                    if (fromObjIndex === toObjIndex && fromRoomIndex === toRoomIndex && fromItemIndex !== toItemIndex && !isNaN(toItemIndex)) {
+                        const [item] = objects[fromObjIndex].rooms[fromRoomIndex].items.splice(fromItemIndex, 1);
+                        objects[toObjIndex].rooms[toRoomIndex].items.splice(toItemIndex, 0, item);
+                        playSound('click');
+                        saveData();
+                        renderApp();
+                    }
                 }
             }
-            clearDragHighlight();
-        }
-
-        function dropItem(e, targetObjIndex, targetRoomIndex, targetItemIndex) {
-            e.preventDefault();
-            if (dragType === 'item' && dragData) {
-                const { objIndex: sourceObjIndex, roomIndex: sourceRoomIndex, itemIndex: sourceItemIndex } = dragData;
-                if (sourceObjIndex === targetObjIndex && sourceRoomIndex === targetRoomIndex && sourceItemIndex !== targetItemIndex) {
-                    const [item] = objects[sourceObjIndex].rooms[sourceRoomIndex].items.splice(sourceItemIndex, 1);
-                    objects[targetObjIndex].rooms[targetRoomIndex].items.splice(targetItemIndex, 0, item);
-                    playSound('click');
-                    saveData();
-                    renderApp();
-                }
+            
+            if (dragState.currentTarget) {
+                dragState.currentTarget.classList.remove('drag-over');
             }
-            clearDragHighlight();
-        }
-
-        function dragOver(e) {
-            e.preventDefault();
-        }
-
-        function dragEnter(e, element) {
-            e.preventDefault();
-            element?.classList.add('drag-over');
-        }
-
-        function dragLeave(e, element) {
-            element?.classList.remove('drag-over');
-        }
-
-        function clearDragHighlight() {
-            document.querySelectorAll('.dragging, .drag-over').forEach(el => {
-                el.classList.remove('dragging', 'drag-over');
+            
+            document.querySelectorAll('.dragging-source').forEach(el => {
+                el.classList.remove('dragging-source');
             });
-            dragType = null;
-            dragData = null;
-            dragSourceId = null;
+            
+            dragState.active = false;
+            dragState.type = null;
+            dragState.sourceData = null;
+            dragState.currentTarget = null;
+        }
+
+        // Добавляем глобальные обработчики для touch/mouse событий
+        function initDragEvents() {
+            document.body.addEventListener('touchmove', handleDragMove, { passive: false });
+            document.body.addEventListener('touchend', handleDragEnd);
+            document.body.addEventListener('mousemove', handleDragMove);
+            document.body.addEventListener('mouseup', handleDragEnd);
         }
 
         function renderApp() {
@@ -1169,14 +1186,9 @@
                 for(let objIdx = 0; objIdx < objects.length; objIdx++) {
                     const obj = objects[objIdx];
                     
-                    html += `<div class="object-item" draggable="true" data-object-index="${objIdx}"
-                        ondragstart="startDragObject(event, ${objIdx})"
-                        ondragover="dragOver(event)"
-                        ondrop="dropObject(event, ${objIdx})"
-                        ondragenter="dragEnter(event, this)"
-                        ondragleave="dragLeave(event, this)">
+                    html += `<div class="object-item" data-object-index="${objIdx}" data-drop-zone data-drop-type="object" data-drop-index="${objIdx}">
                         <div class="object-header">
-                            <span class="drag-handle" draggable="true">⋮⋮</span>
+                            <span class="drag-handle" data-drag-type="object" data-drag-index="${objIdx}" style="cursor:grab; touch-action:none;">⋮⋮</span>
                             <span class="object-name">🏠 ${escapeHtml(obj.name)}</span>
                             <div>
                                 <button class="btn-secondary" data-edit-object="${obj.id}" style="margin-right:8px;">✏️</button>
@@ -1192,14 +1204,9 @@
                     for(let roomIdx = 0; roomIdx < obj.rooms.length; roomIdx++) {
                         const room = obj.rooms[roomIdx];
                         
-                        html += `<div class="room-block" draggable="true" data-object-index="${objIdx}" data-room-index="${roomIdx}"
-                            ondragstart="startDragRoom(event, ${objIdx}, ${roomIdx})"
-                            ondragover="dragOver(event)"
-                            ondrop="dropRoom(event, ${objIdx}, ${roomIdx})"
-                            ondragenter="dragEnter(event, this)"
-                            ondragleave="dragLeave(event, this)">
+                        html += `<div class="room-block" data-object-index="${objIdx}" data-room-index="${roomIdx}" data-drop-zone data-drop-type="room" data-drop-obj-index="${objIdx}" data-drop-room-index="${roomIdx}">
                             <div class="room-title">
-                                <span class="drag-handle" draggable="true">⋮⋮</span>
+                                <span class="drag-handle" data-drag-type="room" data-drag-obj-index="${objIdx}" data-drag-room-index="${roomIdx}" style="cursor:grab; touch-action:none;">⋮⋮</span>
                                 <span style="flex:1;">📍 ${escapeHtml(room.name)}</span>
                                 <button class="delete-room-btn" data-delete-room="${obj.id}|${room.id}">🗑 Удалить</button>
                             </div>`;
@@ -1213,12 +1220,7 @@
                             const isChecked = item.checked;
                             const timeStr = item.lastCheck ? `✅ ${item.lastCheck}` : "—";
                             
-                            html += `<div class="check-item" draggable="true" data-object-index="${objIdx}" data-room-index="${roomIdx}" data-item-index="${itemIdx}" data-item-id="${item.id}"
-                                ondragstart="startDragItem(event, ${objIdx}, ${roomIdx}, ${itemIdx})"
-                                ondragover="dragOver(event)"
-                                ondrop="dropItem(event, ${objIdx}, ${roomIdx}, ${itemIdx})"
-                                ondragenter="dragEnter(event, this)"
-                                ondragleave="dragLeave(event, this)">
+                            html += `<div class="check-item" data-object-index="${objIdx}" data-room-index="${roomIdx}" data-item-index="${itemIdx}" data-item-id="${item.id}" data-drop-zone data-drop-type="item" data-drop-obj-index="${objIdx}" data-drop-room-index="${roomIdx}" data-drop-item-index="${itemIdx}">
                                 <div class="item-info">
                                     <div class="item-name-display">${item.type === 'socket' ? '🔌' : item.type === 'switch' ? '💡' : '🔥'} ${escapeHtml(item.name)}</div>
                                     <div class="item-time">${timeStr}</div>
@@ -1226,6 +1228,7 @@
                                 <div class="item-actions">
                                     <button class="check-btn-small ${isChecked ? 'checked' : ''}" data-toggle="${obj.id}|${room.id}|${item.id}">${isChecked ? "✓" : "○"}</button>
                                     <button class="btn-secondary" data-delete-item="${obj.id}|${room.id}|${item.id}" style="padding:5px 10px;">🗑</button>
+                                    <span class="drag-handle" data-drag-type="item" data-drag-obj-index="${objIdx}" data-drag-room-index="${roomIdx}" data-drag-item-index="${itemIdx}" style="cursor:grab; touch-action:none; padding:5px;">⋮⋮</span>
                                 </div>
                             </div>`;
                         }
@@ -1263,7 +1266,47 @@
             html += `<footer>✅ Перемещайте объекты, помещения и элементы за ⋮⋮. Нажмите и удерживайте для перетаскивания.</footer>`;
             appDiv.innerHTML = html;
             
-            // Привязка событий
+            // Привязка drag handlers
+            document.querySelectorAll('.drag-handle').forEach(handle => {
+                const dragType = handle.dataset.dragType;
+                
+                const getDragData = () => {
+                    if (dragType === 'object') {
+                        return parseInt(handle.dataset.dragIndex);
+                    } else if (dragType === 'room') {
+                        return {
+                            objIndex: parseInt(handle.dataset.dragObjIndex),
+                            roomIndex: parseInt(handle.dataset.dragRoomIndex)
+                        };
+                    } else if (dragType === 'item') {
+                        return {
+                            objIndex: parseInt(handle.dataset.dragObjIndex),
+                            roomIndex: parseInt(handle.dataset.dragRoomIndex),
+                            itemIndex: parseInt(handle.dataset.dragItemIndex)
+                        };
+                    }
+                    return null;
+                };
+                
+                const getDragElement = () => {
+                    if (dragType === 'object') return handle.closest('.object-item');
+                    if (dragType === 'room') return handle.closest('.room-block');
+                    if (dragType === 'item') return handle.closest('.check-item');
+                    return null;
+                };
+                
+                handle.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleDragStart(e, dragType, getDragData(), getDragElement());
+                });
+                
+                handle.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    handleDragStart(e, dragType, getDragData(), getDragElement());
+                });
+            });
+            
+            // Привязка остальных событий
             document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
             document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
             document.getElementById("resetAllBtn")?.addEventListener("click", () => resetAllChecks());
@@ -1365,14 +1408,6 @@
             document.getElementById("objNameInput")?.addEventListener("change", (e) => {
                 tempObject.name = e.target.value;
             });
-            
-            // Предотвращаем стандартное поведение drag для всех draggable элементов
-            document.querySelectorAll('[draggable="true"]').forEach(el => {
-                el.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', 'drag');
-                    e.dataTransfer.effectAllowed = 'move';
-                });
-            });
         }
         
         function escapeHtml(str) {
@@ -1385,19 +1420,9 @@
             });
         }
         
-        // Глобальные функции для drag and drop
-        window.startDragObject = startDragObject;
-        window.startDragRoom = startDragRoom;
-        window.startDragItem = startDragItem;
-        window.dropObject = dropObject;
-        window.dropRoom = dropRoom;
-        window.dropItem = dropItem;
-        window.dragOver = dragOver;
-        window.dragEnter = dragEnter;
-        window.dragLeave = dragLeave;
-        
         loadData();
         applyTheme();
+        initDragEvents();
         renderApp();
     </script>
 </body>
