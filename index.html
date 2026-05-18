@@ -746,13 +746,8 @@
 
         // ========== ПРЕМИУМ С ЗАЩИТОЙ ==========
         const PREMIUM = {
-            // Демо-ключи (удалите или замените перед реальным запуском!)
             demoKeys: ["DEMO2024", "PREMIUM2024", "CHECKCALM"],
-            
-            // Реальные ключи (будете добавлять сюда после продажи)
             validKeys: [],
-            
-            // Чёрный список скомпрометированных ключей
             blacklistedKeys: [],
             
             getDeviceId() {
@@ -771,30 +766,23 @@
             activatePremium(key) {
                 const normalizedKey = key.toUpperCase().trim();
                 const deviceId = this.getDeviceId();
-                
-                // Загружаем историю активаций
                 const activations = JSON.parse(localStorage.getItem("premium_activations") || "{}");
                 
-                // Проверка чёрного списка
                 if (this.blacklistedKeys.includes(normalizedKey)) {
                     alert(t("keyBlocked"));
                     playSound('error');
                     return false;
                 }
                 
-                // Проверка: не активирован ли ключ на другом устройстве
                 if (activations[normalizedKey] && activations[normalizedKey] !== deviceId) {
                     alert(t("keyAlreadyUsed"));
                     playSound('error');
                     return false;
                 }
                 
-                // Проверка валидности ключа
-                const isValid = this.demoKeys.includes(normalizedKey) || 
-                                this.validKeys.includes(normalizedKey);
+                const isValid = this.demoKeys.includes(normalizedKey) || this.validKeys.includes(normalizedKey);
                 
                 if (isValid) {
-                    // Сохраняем активацию
                     activations[normalizedKey] = deviceId;
                     localStorage.setItem("premium_activations", JSON.stringify(activations));
                     localStorage.setItem("checkcalm_premium", "true");
@@ -808,12 +796,10 @@
                 return false;
             },
             
-            // Добавить новый ключ после продажи
             addKey(key) {
                 this.validKeys.push(key.toUpperCase());
             },
             
-            // Заблокировать скомпрометированный ключ
             blockKey(key) {
                 this.blacklistedKeys.push(key.toUpperCase());
             }
@@ -906,12 +892,10 @@
         }
 
         function getPremiumKeyLink() {
-            // ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ BOOSTY
             return "https://boosty.to/aomnsk/posts/979e3000-be97-4254-aa62-1405be2d5bca";
         }
 
         function getSupportLink() {
-            // ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ ДЛЯ ДОНАТОВ
             return "https://boosty.to/aomnsk";
         }
 
@@ -1350,6 +1334,15 @@
             document.body.addEventListener('mouseup', handleDragEnd);
         }
 
+        function closePremiumModal() {
+            const modal = document.getElementById('premiumModalOverlay');
+            if (modal) {
+                modal.remove();
+            }
+            showPremiumModal = false;
+            renderApp();
+        }
+
         function renderApp() {
             const appDiv = document.getElementById("app");
             if(!appDiv) return;
@@ -1509,8 +1502,8 @@
             html += `<footer>✅ Нажмите на объект для разворачивания. Перемещайте объекты за ⋮⋮.</footer>`;
             appDiv.innerHTML = html;
             
-            // Premium Modal
-            if (showPremiumModal) {
+            // Premium Modal (только если нужно и модальное окно ещё не открыто)
+            if (showPremiumModal && !document.getElementById('premiumModalOverlay')) {
                 const modalHtml = `
                     <div class="premium-modal-overlay" id="premiumModalOverlay">
                         <div class="premium-modal">
@@ -1535,32 +1528,27 @@
                 
                 document.getElementById("buyPremiumBtn")?.addEventListener("click", () => {
                     window.open(getPremiumKeyLink(), '_blank');
-                    showPremiumModal = false;
-                    renderApp();
                 });
                 document.getElementById("enterKeyBtn")?.addEventListener("click", () => {
                     const key = prompt("Введите ключ активации Premium:");
                     if (key) {
                         if (PREMIUM.activatePremium(key)) {
-                            showPremiumModal = false;
-                            renderApp();
+                            closePremiumModal();
                         }
                     }
                 });
                 document.getElementById("closePremiumModal")?.addEventListener("click", () => {
-                    showPremiumModal = false;
-                    renderApp();
+                    closePremiumModal();
                 });
                 document.getElementById("premiumModalOverlay")?.addEventListener("click", (e) => {
                     if (e.target.id === "premiumModalOverlay") {
-                        showPremiumModal = false;
-                        renderApp();
+                        closePremiumModal();
                     }
                 });
             }
             
             // Settings Modal
-            if (showSettingsModal) {
+            if (showSettingsModal && !document.getElementById('settingsModalOverlay')) {
                 const settingsHtml = `
                     <div class="premium-modal-overlay" id="settingsModalOverlay">
                         <div class="premium-modal">
@@ -1577,16 +1565,22 @@
                 
                 document.getElementById("activatePremiumSettingsBtn")?.addEventListener("click", () => {
                     showSettingsModal = false;
+                    const modal = document.getElementById('settingsModalOverlay');
+                    if (modal) modal.remove();
                     showPremiumModal = true;
                     renderApp();
                 });
                 document.getElementById("closeSettingsModal")?.addEventListener("click", () => {
                     showSettingsModal = false;
+                    const modal = document.getElementById('settingsModalOverlay');
+                    if (modal) modal.remove();
                     renderApp();
                 });
                 document.getElementById("settingsModalOverlay")?.addEventListener("click", (e) => {
                     if (e.target.id === "settingsModalOverlay") {
                         showSettingsModal = false;
+                        const modal = document.getElementById('settingsModalOverlay');
+                        if (modal) modal.remove();
                         renderApp();
                     }
                 });
@@ -1702,7 +1696,7 @@
             });
             
             document.querySelectorAll("[data-delete-item]").forEach(btn => {
-                btn.addEventListener("click", (e) => {
+                btn.addEventListener("click", (e) {
                     const val = btn.getAttribute("data-delete-item");
                     if(val) {
                         const [objId, roomId, itemId] = val.split("|");
