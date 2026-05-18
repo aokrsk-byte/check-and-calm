@@ -590,7 +590,6 @@
             color: #64748b;
         }
 
-        /* Premium Modal */
         .premium-modal-overlay {
             position: fixed;
             top: 0;
@@ -744,7 +743,6 @@
         let showPremiumModal = false;
         let showSettingsModal = false;
 
-        // ========== ПРЕМИУМ С ЗАЩИТОЙ ==========
         const PREMIUM = {
             demoKeys: ["DEMO2024", "PREMIUM2024", "CHECKCALM"],
             validKeys: [],
@@ -1205,7 +1203,6 @@
             renderApp();
         }
 
-        // ========== DRAG AND DROP ==========
         let dragState = {
             active: false,
             sourceIndex: null,
@@ -1502,7 +1499,6 @@
             html += `<footer>✅ Нажмите на объект для разворачивания. Перемещайте объекты за ⋮⋮.</footer>`;
             appDiv.innerHTML = html;
             
-            // Premium Modal (только если нужно и модальное окно ещё не открыто)
             if (showPremiumModal && !document.getElementById('premiumModalOverlay')) {
                 const modalHtml = `
                     <div class="premium-modal-overlay" id="premiumModalOverlay">
@@ -1547,7 +1543,6 @@
                 });
             }
             
-            // Settings Modal
             if (showSettingsModal && !document.getElementById('settingsModalOverlay')) {
                 const settingsHtml = `
                     <div class="premium-modal-overlay" id="settingsModalOverlay">
@@ -1586,7 +1581,6 @@
                 });
             }
             
-            // Привязка drag handlers
             document.querySelectorAll('.drag-handle').forEach(handle => {
                 const dragIndex = handle.dataset.dragIndex;
                 if (dragIndex !== undefined) {
@@ -1601,7 +1595,6 @@
                 }
             });
             
-            // Привязка остальных событий
             document.getElementById("langSelect")?.addEventListener("change", (e) => setLanguage(e.target.value));
             document.getElementById("themeToggleBtn")?.addEventListener("click", () => toggleTheme());
             document.getElementById("settingsBtn")?.addEventListener("click", () => {
@@ -1696,7 +1689,7 @@
             });
             
             document.querySelectorAll("[data-delete-item]").forEach(btn => {
-                btn.addEventListener("click", (e) {
+                btn.addEventListener("click", (e) => {
                     const val = btn.getAttribute("data-delete-item");
                     if(val) {
                         const [objId, roomId, itemId] = val.split("|");
