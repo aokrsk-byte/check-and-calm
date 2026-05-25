@@ -1510,7 +1510,10 @@
                 html += `</div>`;
             }
             
-            html += `<footer>✅ Нажмите на объект для разворачивания. Перемещайте объекты за ⋮⋮.</footer>`;
+            html += `<footer>✅ Нажмите на объект для разворачивания. Перемещайте объекты за ⋮⋮.
+                <small>
+    <p>© <span id="copyright-year"></span> Александр Обухов. <a rel="license" href="LICENSE">MIT License</a>.</p>
+</small></footer>`;
             appDiv.innerHTML = html;
             
             if (showPremiumModal && !document.getElementById('premiumModalOverlay')) {
@@ -1732,6 +1735,8 @@
         applyTheme();
         initDragEvents();
         renderApp();
+        // Автоматически обновляет год в копирайте
+document.getElementById('copyright-year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>
